@@ -1,0 +1,43 @@
+{
+  "name": "the-vault",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "recording": "node scripts/sync-recording.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.180.0",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/drei": "^10.7.0",
+    "@react-three/rapier": "^2.2.0",
+    "ecctrl": "^1.0.97",
+    "@react-three/postprocessing": "^3.0.4",
+    "postprocessing": "^6.38.0",
+    "gsap": "^3.13.0",
+    "motion": "^12.23.0",
+    "zustand": "^5.0.8",
+    "howler": "^2.2.4",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.9.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.180.0",
+    "@types/howler": "^2.2.12",
+    "@types/node": "^22.0.0",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "vitest": "^3.2.0",
+    "@playwright/test": "^1.56.0"
+  }
+}
