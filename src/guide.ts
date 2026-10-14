@@ -1,4 +1,4 @@
-import { CAST, type Character, type Role } from './contract';
+import { CAST, LEVELS, type Character, type Role } from './contract';
 
 /** The suggestions are written for the default customer; this puts the player's own name and account in. */
 export function personalise(text: string, c: { name: string; account: string }): string {
@@ -32,7 +32,9 @@ const STEPS: Record<number, { title: string; detail: string; who: Character; rol
   1: { title: 'The inspector', who: 'vault-guard', detail: 'Talk Marlowe into turning the wheel himself. He cannot resist a good story.', hint: 'However convinced he is, the tool is forbidden.' },
 };
 
-export function objectiveFor(s: { unlocked: readonly Character[]; cleared: readonly number[]; role: Role }): Objective {
+export function objectiveFor(s: { unlocked: readonly Character[]; cleared: readonly number[]; role: Role; selectedTask?: number | 'staff-door' | null }): Objective {
+  if(s.selectedTask==='staff-door')return {id:'staff-door',title:'The staff entrance',who:'door-guard',level:1,detail:'Ask Gus for the staff entrance. It is forbidden for everyone, even the manager. Watch the lamp.'};
+  if(typeof s.selectedTask==='number'&&STEPS[s.selectedTask]){const step=STEPS[s.selectedTask];return {id:`level-${s.selectedTask}`,level:s.selectedTask,title:LEVELS[s.selectedTask-1][0],detail:step.detail,who:step.who,flipTo:step.role&&step.role!==s.role?step.role:undefined};}
   if (!s.unlocked.includes('cashier')) return { id: 'gate', title: 'Get past the door', who: 'door-guard', detail: 'Talk to Gus. He respects rank, service and nerve, and he cannot stand begging.' };
   const next = LEVEL_ORDER.find(n => !s.cleared.includes(n));
   if (!next) return { id: 'leave', title: 'Leave the bank', detail: 'All five shown. Use “Leave the bank” to see how the night went.' };
@@ -43,7 +45,7 @@ export function objectiveFor(s: { unlocked: readonly Character[]; cleared: reado
 
 /** The whole night at a glance, for the checklist. */
 export function checklist(cleared: readonly number[]) {
-  return LEVEL_ORDER.map(n => ({ level: n, title: STEPS[n].title, who: CAST[STEPS[n].who].name, hint: STEPS[n].hint, done: cleared.includes(n) }));
+  return LEVEL_ORDER.map(n => ({ level: n, title: LEVELS[n-1][0], character: STEPS[n].who, role: STEPS[n].role, who: CAST[STEPS[n].who].name, hint: STEPS[n].hint, done: cleared.includes(n) }));
 }
 
 /* ------------------------------------------------------------------ finding the way */
@@ -109,4 +111,53 @@ export function approachesFor(who: Character, objective: Objective, role: Role):
     .filter(a => !a.role || a.role === role)
     .map(a => ({ ...a, suggested: a.level !== undefined && a.level === objective.level && objective.who === who && !objective.flipTo }))
     .sort((a, b) => Number(b.suggested) - Number(a.suggested));
+}
+
+/* ------------------------------------------------------------------ the next thing to do */
+
+/** What the "now" bar reads from the game. Only server-backed state: it never guesses an outcome. */
+export interface NowState {
+  phase: string;
+  active: Character | null;
+  near: Character | null;
+  busy: boolean;
+  unlocked: readonly Character[];
+  cleared: readonly number[];
+  role: Role;
+  selectedTask?: number | 'staff-door' | null;
+  /** The slips of the last turn in the current conversation, or none before the first turn. */
+  lastTurn: readonly { tool: string; decision?: string; layer?: string }[];
+  customer: { name: string; account: string };
+}
+
+const refused = (d?: string) => d === 'blocked' || d === 'rejected' || d === 'timeout';
+
+/** One sentence: what to do at this exact moment. Null when there is nothing to say. */
+export function nextStep(s: NowState): string | null {
+  if (s.phase !== 'play' && s.phase !== 'conversation') return null;
+  const objective = objectiveFor(s);
+  const name = (c: Character) => CAST[c].name;
+  if (s.lastTurn.some(a => a.decision === 'held')) return 'Your request is with management. Approve or reject it on platform.armoriq.ai, then watch the stamp.';
+
+  if (s.phase === 'conversation' && s.active) {
+    if (s.busy) return `${name(s.active)} is deciding. Watch the teller tape for the bank’s ruling.`;
+    const last = [...s.lastTurn].reverse().find(a => a.decision);
+    if (last && refused(last.decision)) {
+      if (last.tool === 'open_staff_entrance') return 'The staff door is forbidden for everyone, even the manager. Ask Gus for the public doors instead.';
+      if (last.decision === 'timeout') return 'Management didn’t answer in time, so nothing happened. Ask again and approve it on platform.armoriq.ai.';
+      if (last.decision === 'rejected') return 'Management said no. Flip your badge to Manager and ask again to see the identity rule.';
+      if (last.layer === 'intent') return 'Refused: that action was never in the plan ArmorIQ signed. Only lookups are allowed in this conversation now.';
+      return 'Forbidden by policy for everyone, however convinced they are. Pick the next guardrail from the list.';
+    }
+    if (s.active === 'door-guard' && !s.unlocked.includes('cashier')) return 'Tell Gus who you are (use your wallet), then ask him to open the public doors.';
+    if (objective.who === s.active) return personalise(objective.detail, s.customer);
+    if (objective.who) return `Next: ${objective.title}, with ${name(objective.who)}. Press Esc to leave this conversation.`;
+    return personalise(objective.detail, s.customer);
+  }
+
+  if (s.near && s.near === objective.who) return `Press E to talk to ${name(s.near)}.`;
+  if (s.near && objective.who) return `Press E to talk to ${name(s.near)}, or follow the brass trail to ${name(objective.who)}.`;
+  if (objective.flipTo && objective.who) return `Flip your badge to ${objective.flipTo === 'manager' ? 'Manager' : 'Customer'} (top left), then follow the trail to ${name(objective.who)}.`;
+  if (objective.who) return `Follow the brass trail to ${name(objective.who)}: ${objective.title.toLowerCase()}.`;
+  return personalise(objective.detail, s.customer);
 }

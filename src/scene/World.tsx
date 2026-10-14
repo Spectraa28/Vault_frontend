@@ -32,15 +32,15 @@ function Scene(){
  return <>
   <color attach="background" args={['#101e23']}/><fog attach="fog" args={['#101e23',25,80]}/>
   <Environment files="/textures/night.hdr" environmentIntensity={.65}/><Lighting/>
-  <Physics timeStep={1/60} paused={!started}>
+  <Physics timeStep={1/60} interpolate updatePriority={-100} paused={!started}>
    <Gate/>{started&&<Lobby/>}{unlocked.includes('vault-guard')&&<Vault/>}
    <Box at={[-16,2,9]} size={[.3,4,20]} color="#15292b" solid/><Box at={[16,2,9]} size={[.3,4,20]} color="#15292b" solid/><Box at={[0,1.5,19]} size={[32,3,.3]} color="#15292b" solid/>
    {started&&<><Player/><Actor id="door-guard"/>{unlocked.includes('cashier')&&<Actor id="cashier"/>}{unlocked.includes('vault-guard')&&<><Actor id="vault-guard"/><Pip/></>}</>}
    {phase==='login'&&<Avatars/>}
+   <Camera/>
   </Physics>
-  <Rain/>{graphics!=='Low'&&<Sparkles count={70} scale={[14,6,35]} size={1.6} speed={reduced?0:.16} opacity={.3} position={[0,2,-12]} color="#d7bd7c"/>}
+  <Rain/><Sparkles count={graphics==='Low'?24:70} scale={[14,6,35]} size={1.6} speed={reduced?0:.16} opacity={.25} position={[0,2,-12]} color="#d7bd7c"/>
   {phase==='play'&&<Waypoint/>}
-  <Camera/>
   {graphics!=='Low'&&<EffectComposer multisampling={0}>
    <Bloom intensity={.35} luminanceThreshold={1.1} mipmapBlur/>
    <Vignette eskil={false} offset={.2} darkness={.48}/><Noise opacity={.022}/>

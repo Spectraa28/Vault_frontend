@@ -4,5 +4,5 @@
  */
 export const playerPosition = { x: 1.2, y: 1, z: 6.3 };
 /** Lets the recorded tour place the visitor. The Player sets it while mounted. */
-export const playerControl: { teleport?: (x: number, y: number, z: number) => void } = {};
+export const playerControl: { teleport?: (x: number, y: number, z: number) => void; renderedPosition?: () => { x: number; y: number; z: number } } = {};
 export const playerMotion = { speed: 0 };

@@ -6,7 +6,7 @@ import { useGame } from './store';
 import { sound, voice } from './sound';
 import { useSpeech } from './useSpeech';
 import TellerTape from './TellerTape';
-import { Approaches } from './Guide';
+import { Approaches, TaskPanel } from './Guide';
 import { IdCard } from './IdCard';
 function Typewriter({text}:{text:string}){const reduced=useGame(s=>s.reduced);const [count,setCount]=useState(0);useEffect(()=>{setCount(reduced?text.length:0);if(reduced)return;const t=setInterval(()=>setCount(n=>{if(n>=text.length){clearInterval(t);return n;}return n+2;}),25);return()=>clearInterval(t);},[text,reduced]);return <><span aria-hidden="true">{text.slice(0,count)}{count>=text.length&&<span className="next-arrow">▾</span>}</span><span className="sr-only">{text}</span></>;}
 let activeRequest:AbortController|null=null;
@@ -34,7 +34,7 @@ export default function Conversation(){
   if(s.reply.coldShoulder||s.notice){const t=setTimeout(()=>g().leave(),s.reply.coldShoulder?3000:2200);return()=>clearTimeout(t);}
  },[s.reply,s.busy,s.notice]);
  useEffect(()=>{
-  const down=(e:KeyboardEvent)=>{if(e.code==='Escape'){e.preventDefault();speech.end();s.leave();}else if(e.code==='Space'&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)&&!(e.target instanceof HTMLButtonElement)&&!s.busy&&!MOCK){e.preventDefault();if(!e.repeat)speech.begin();}else if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)){s.leave();}};
+  const down=(e:KeyboardEvent)=>{if(e.code==='Escape'){e.preventDefault();if(useGame.getState().tasksOpen){useGame.getState().set({tasksOpen:false});return;}speech.end();s.leave();}else if(e.code==='Space'&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)&&!(e.target instanceof HTMLButtonElement)&&!s.busy&&!MOCK){e.preventDefault();if(!e.repeat)speech.begin();}else if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)&&!(e.target as HTMLElement).closest('button, select, .task-panel, .wallet, .teller-tape')){s.leave();}};
   const up=(e:KeyboardEvent)=>{if(e.code==='Space'&&speech.listening)speech.end();};window.addEventListener('keydown',down);window.addEventListener('keyup',up);return()=>{window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);};
  },[s.busy,speech.listening]);
  async function send(){
@@ -54,6 +54,8 @@ export default function Conversation(){
   <div className="letterbox top"/><div className="letterbox bottom"/>
   <div className="conversation-heading"><span className="eyebrow">A PRIVATE CONVERSATION</span><button className="text-button" onClick={()=>{speech.end();s.leave();}}>Leave <kbd>Esc</kbd></button></div>
   <div className="character-label"><span>{cast.title}</span><h2>{cast.name}<i>.</i></h2><div className="trust" aria-label={s.trust===null?'Trust not yet known':`Trust ${s.trust} out of 5`}>{Array.from({length:5},(_,i)=><b key={i} className={s.trust!==null&&i<s.trust?'filled':''}/>)}<small>{s.trust===null?'READING THE ROOM':s.mood.toUpperCase()}</small></div></div>
+  <IdCard onShow={line=>{setText(t=>(t.trim()?`${t.trim()} ${line}`:line).slice(0,1500));input.current?.focus();}}/>
+  {s.tasksOpen&&<TaskPanel/>}
   <TellerTape/>
   <motion.section className="dialogue" initial={s.reduced?false:{y:40,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:s.reduced?0:.7,duration:.4}} aria-label={`Conversation with ${cast.name}`}>
    {s.lastLine&&<p className="last-line">“{s.lastLine}”</p>}
@@ -63,7 +65,6 @@ export default function Conversation(){
     <form onSubmit={e=>{e.preventDefault();void send();}}>
      <label className="sr-only" htmlFor="player-line">Your line to {cast.name}</label>
      <Approaches character={character} onPick={line=>{setText(line);input.current?.focus();}}/>
-     <IdCard onShow={line=>{setText(t=>t.trim()?`${t.trim()} ${line}`:line);input.current?.focus();}}/>
      <div className="input-row"><button type="button" className={`talk-button ${speech.listening?'listening':''}`} aria-label="Hold to talk" disabled={MOCK||s.busy||!speech.available} title={MOCK?'Recorded mode uses the original line':!speech.available?'Speech input is unavailable in this browser. Use the text field.':'Hold to talk; release to review the transcript'} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);speech.begin();}} onPointerUp={speech.end} onPointerCancel={speech.end} onKeyDown={e=>{if([' ','Enter'].includes(e.key)){e.preventDefault();if(!e.repeat)speech.begin();}}} onKeyUp={e=>{if([' ','Enter'].includes(e.key))speech.end();}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11v1a6 6 0 0012 0v-1M12 18v3M8 21h8"/></svg></button>
       <textarea ref={input} id="player-line" maxLength={1500} rows={2} value={text} readOnly={MOCK} disabled={s.busy} placeholder={MOCK?nowhere:'A little charm. A convincing story. Your move.'} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/>
       <button className="send-button" type="submit" disabled={s.busy||s.roleBusy||!text.trim()||Date.now()<s.retryUntil}>{s.busy?'WAIT':MOCK?(next?'REPLAY':'NO LINE'):'SAY IT'}<span>↵</span></button>

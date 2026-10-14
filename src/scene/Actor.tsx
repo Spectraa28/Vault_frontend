@@ -5,7 +5,7 @@ import { Group, MathUtils, Vector3 } from 'three';
 import { CapsuleCollider, RigidBody } from '@react-three/rapier';
 import { CAST, type Character, type Mood } from '../contract';
 import { type Act, actStage, useGame } from '../store';
-import { C } from './primitives';
+import { C, GroundShadow, boxShape, tubeShape, surface } from './primitives';
 import { footfall, key as keyTap } from '../sound';
 
 import { playerMotion, playerPosition } from './shared';
@@ -188,9 +188,8 @@ function actPose(kind: ActKind, stage: Act['stage'], t: number, since: number): 
 export interface FigureState { mood?: Mood; speaking?: boolean; thinking?: boolean; /** Engaged with the player, so mood shows; otherwise they are just passing the time. */ engaged?: boolean; act?: { tool: string; stage: Act['stage']; since: number } | null; walking?: number; lookYaw?: number; lookPitch?: number }
 
 function Part({ at, size, color, rot, metal = 0, rough = 0.85, shape = 'box' }: { at?: Vec; size: Vec; color: string; rot?: Vec; metal?: number; rough?: number; shape?: 'box' | 'ball' | 'tube' }) {
-  return <mesh position={at} rotation={rot} castShadow>
-    {shape === 'box' ? <boxGeometry args={size}/> : shape === 'ball' ? <sphereGeometry args={[size[0], 14, 12]}/> : <cylinderGeometry args={[size[0], size[1], size[2], 14]}/>}
-    <meshStandardMaterial color={color} metalness={metal} roughness={rough}/>
+  return <mesh position={at} rotation={rot} castShadow geometry={shape==='box'?boxShape(size):shape==='tube'?tubeShape(...size):undefined} material={surface(color,metal,rough)} dispose={null}>
+    {shape === 'ball' && <sphereGeometry args={[size[0], 14, 12]}/>}
   </mesh>;
 }
 
@@ -263,6 +262,7 @@ export function Figure({ look, live, player = false }: { look: Look; live?: RefO
   const sleeve = has('waistcoat') ? look.shirt : look.coat;
 
   return <group scale={[w, h, w]}>
+    <GroundShadow/>
     <group ref={body}>
       {[[-0.13, lLeg], [0.13, rLeg]].map(([x, ref]) => <group key={x as number} ref={ref as RefObject<Group>} position={[x as number, 0.86, 0]}>
         <Part at={[0, -0.4, 0]} size={[0.105, 0.09, 0.8]} color={look.trousers} shape="tube"/>
@@ -416,7 +416,7 @@ export function Actor({ id }: { id: Character }) {
   const { root, live } = useStaff(id, spec.position, spec.facing);
   const near = useGame(s => s.near === id), active = useGame(s => s.active === id), cold = useGame(s => s.coldUntil[id] ?? 0);
   return <>
-    <RigidBody type="fixed" colliders={false} position={spec.position}><CapsuleCollider args={[0.6, 0.34]} position={[0, 1, 0]}/></RigidBody>
+    <RigidBody type="fixed" colliders={false} position={spec.position} userData={{cameraIgnore:true}}><CapsuleCollider args={[0.6, 0.34]} position={[0, 1, 0]}/></RigidBody>
     <group ref={root} position={spec.position}><Figure look={LOOKS[id]} live={live}/></group>
     <group position={spec.position}>
       {(near || active) && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03 - spec.position[1], spec.ring]}><ringGeometry args={[0.62, 0.68, 48]}/><meshBasicMaterial color={C.brass} transparent opacity={0.75}/></mesh>}

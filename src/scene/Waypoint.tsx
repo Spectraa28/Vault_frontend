@@ -13,8 +13,9 @@ const MAX = 70;
  * routed through the doors and down the stairs, and a beacon over the spot to stand on.
  */
 export default function Waypoint() {
+  const selectedTask=useGame(s=>s.selectedTask);
   const unlocked = useGame(s => s.unlocked), cleared = useGame(s => s.cleared), role = useGame(s => s.role), reduced = useGame(s => s.reduced);
-  const target = useMemo<Vec | null>(() => { const o = objectiveFor({ unlocked, cleared, role }); return o.who ? standPoint(o.who) : null; }, [unlocked, cleared, role]);
+  const target = useMemo<Vec | null>(() => { const o = objectiveFor({ unlocked, cleared, role, selectedTask }); return o.who ? standPoint(o.who) : null; }, [unlocked, cleared, role, selectedTask]);
   const dots = useRef<InstancedMesh>(null), beacon = useRef<Group>(null), dummy = useMemo(() => new Object3D(), []);
   const state = useRef({ points: [] as Vec[], last: [9e9, 0, 9e9] as Vec });
   useLayoutEffect(() => { state.current.last = [9e9, 0, 9e9]; }, [target]);

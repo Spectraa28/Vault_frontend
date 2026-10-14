@@ -1,3 +1,4 @@
+import { disclosedBalance } from './wallet';
 import { create } from 'zustand';
 import { CAST, DEFAULT_CUSTOMER, type Character, type Customer, type GameEvent, type Mood, type Reply, type Role, type Summary } from './contract';
 export type Phase = 'title' | 'login' | 'play' | 'conversation' | 'ending' | 'end';
@@ -12,7 +13,7 @@ export interface Slip { id: number; tool: string; args: Record<string, unknown>;
 interface GameState {
   phase: Phase; name: string; role: Role; avatar: number; gameId: string; unlocked: Character[]; cleared: number[];
   /** The player's own record at this game's bank: their name and account. */
-  customer: Customer;
+  customer: Customer; balance: string | null; selectedTask: number | 'staff-door' | null; tasksOpen: boolean;
   area: Area; near: Character | null; active: Character | null; busy: boolean; roleBusy: boolean; error: string; retryUntil: number;
   slips: Slip[]; turnStartSlip: number; reply: Reply | null; lastLine: string; mood: Mood; trust: number | null; summary: Summary | null;
   graphics: Graphics; muted: boolean; reduced: boolean; vaultAttempt: number; delegateAt: number;
@@ -22,7 +23,7 @@ interface GameState {
   notice: string; plaque: number[]; coldUntil: Partial<Record<Character, number>>; enforcementFault: boolean;
   set: (state: Partial<GameState>) => void; event: (e: GameEvent) => void; talk: (id: Character) => void; leave: () => void; reset: () => void;
 }
-const initial = { phase: 'title' as Phase, name: '', role: 'customer' as Role, avatar: 0, gameId: '', customer: DEFAULT_CUSTOMER, unlocked: [] as Character[], cleared: [] as number[], area: 'gate' as Area, near: null, active: null, busy: false, roleBusy: false, error: '', retryUntil: 0, slips: [] as Slip[], turnStartSlip: 0, reply: null, lastLine: '', mood: 'wary' as Mood, trust: null, summary: null, vaultAttempt: 0, delegateAt: 0, act: null as Act | null, speakUntil: 0, cine: null as { shot: 'door'; at: number } | null, fade: false, notice: '', plaque: [] as number[], coldUntil: {}, enforcementFault: false };
+const initial = { phase: 'title' as Phase, name: '', role: 'customer' as Role, avatar: 0, gameId: '', customer: DEFAULT_CUSTOMER, balance: null as string|null, selectedTask: null as number|'staff-door'|null, tasksOpen: false, unlocked: [] as Character[], cleared: [] as number[], area: 'gate' as Area, near: null, active: null, busy: false, roleBusy: false, error: '', retryUntil: 0, slips: [] as Slip[], turnStartSlip: 0, reply: null, lastLine: '', mood: 'wary' as Mood, trust: null, summary: null, vaultAttempt: 0, delegateAt: 0, act: null as Act | null, speakUntil: 0, cine: null as { shot: 'door'; at: number } | null, fade: false, notice: '', plaque: [] as number[], coldUntil: {}, enforcementFault: false };
 export function updateSlips(slips: Slip[], e: GameEvent): Slip[] {
   if (e.type === 'tool') return [...slips, { id: (slips.at(-1)?.id ?? 0) + 1, tool: e.tool, args: e.args, delegatedTo: e.delegatedTo }].slice(-30);
   if (e.type !== 'hold' && e.type !== 'decision') return slips;
@@ -52,7 +53,7 @@ export const useGame = create<GameState>((set, get) => ({
         if (index >= 0) slips[index] = { ...slips[index], ...a, heldAt: undefined };
         else slips.push({ id: (slips.at(-1)?.id ?? 0) + 1, ...a });
       }
-      set({ slips, reply: e, mood: e.mood, trust: e.trust, speakUntil: Date.now() + 700 + e.reply.length * 55, unlocked: [...new Set([...s.unlocked, ...e.unlocked])], cleared: [...new Set([...s.cleared, ...e.cleared])], plaque: [...s.plaque, ...e.cleared.filter(n => !s.cleared.includes(n))], notice: newAreas.includes('cashier') ? 'The lobby is open' : newAreas.includes('vault-guard') ? 'The vault corridor is open' : s.notice, coldUntil: e.coldShoulder && s.active ? { ...s.coldUntil, [s.active]: Date.now() + 12000 } : s.coldUntil, enforcementFault: s.enforcementFault || e.enforcementHeld === false || e.attempts.some(a => a.tool === 'open_vault' && a.executed) });
+      set({ ...(e.name==='Wren' && disclosedBalance(e.reply) && {balance:disclosedBalance(e.reply)}), slips, reply: e, mood: e.mood, trust: e.trust, speakUntil: Date.now() + 700 + e.reply.length * 55, unlocked: [...new Set([...s.unlocked, ...e.unlocked])], cleared: [...new Set([...s.cleared, ...e.cleared])], plaque: [...s.plaque, ...e.cleared.filter(n => !s.cleared.includes(n))], notice: newAreas.includes('cashier') ? 'The lobby is open' : newAreas.includes('vault-guard') ? 'The vault corridor is open' : s.notice, coldUntil: e.coldShoulder && s.active ? { ...s.coldUntil, [s.active]: Date.now() + 12000 } : s.coldUntil, enforcementFault: s.enforcementFault || e.enforcementHeld === false || e.attempts.some(a => a.tool === 'open_vault' && a.executed) });
     } else set({ slips: updateSlips(s.slips, e),
       ...(e.type === 'tool' && s.active && { act: { who: e.delegatedTo ? 'junior-teller' as const : s.active, tool: e.tool, stage: 'working' as const, at: Date.now() } }),
       ...(e.type === 'hold' && s.act && { act: { ...s.act, stage: 'held' as const, at: Date.now() } }),
