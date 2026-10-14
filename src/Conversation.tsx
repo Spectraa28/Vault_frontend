@@ -7,6 +7,7 @@ import { sound, voice } from './sound';
 import { useSpeech } from './useSpeech';
 import TellerTape from './TellerTape';
 import { Approaches } from './Guide';
+import { IdCard } from './IdCard';
 function Typewriter({text}:{text:string}){const reduced=useGame(s=>s.reduced);const [count,setCount]=useState(0);useEffect(()=>{setCount(reduced?text.length:0);if(reduced)return;const t=setInterval(()=>setCount(n=>{if(n>=text.length){clearInterval(t);return n;}return n+2;}),25);return()=>clearInterval(t);},[text,reduced]);return <><span aria-hidden="true">{text.slice(0,count)}{count>=text.length&&<span className="next-arrow">▾</span>}</span><span className="sr-only">{text}</span></>;}
 let activeRequest:AbortController|null=null;
 export function cancelTurn(){activeRequest?.abort();activeRequest=null;}
@@ -62,6 +63,7 @@ export default function Conversation(){
     <form onSubmit={e=>{e.preventDefault();void send();}}>
      <label className="sr-only" htmlFor="player-line">Your line to {cast.name}</label>
      <Approaches character={character} onPick={line=>{setText(line);input.current?.focus();}}/>
+     <IdCard onShow={line=>{setText(t=>t.trim()?`${t.trim()} ${line}`:line);input.current?.focus();}}/>
      <div className="input-row"><button type="button" className={`talk-button ${speech.listening?'listening':''}`} aria-label="Hold to talk" disabled={MOCK||s.busy||!speech.available} title={MOCK?'Recorded mode uses the original line':!speech.available?'Speech input is unavailable in this browser. Use the text field.':'Hold to talk; release to review the transcript'} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);speech.begin();}} onPointerUp={speech.end} onPointerCancel={speech.end} onKeyDown={e=>{if([' ','Enter'].includes(e.key)){e.preventDefault();if(!e.repeat)speech.begin();}}} onKeyUp={e=>{if([' ','Enter'].includes(e.key))speech.end();}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11v1a6 6 0 0012 0v-1M12 18v3M8 21h8"/></svg></button>
       <textarea ref={input} id="player-line" maxLength={1500} rows={2} value={text} readOnly={MOCK} disabled={s.busy} placeholder={MOCK?nowhere:'A little charm. A convincing story. Your move.'} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}/>
       <button className="send-button" type="submit" disabled={s.busy||s.roleBusy||!text.trim()||Date.now()<s.retryUntil}>{s.busy?'WAIT':MOCK?(next?'REPLAY':'NO LINE'):'SAY IT'}<span>↵</span></button>
