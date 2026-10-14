@@ -3,7 +3,7 @@ import { MOCK } from './api';
 import { CAST, type Character } from './contract';
 import { approachesFor, checklist, objectiveFor, personalise, standPoint } from './guide';
 import { useGame } from './store';
-import { playerPosition } from './scene/Actor';
+import { playerPosition } from './scene/shared';
 
 const useObjective = () => {
   const unlocked = useGame(s => s.unlocked), cleared = useGame(s => s.cleared), role = useGame(s => s.role);

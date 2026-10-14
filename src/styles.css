@@ -78,3 +78,8 @@
 .who-you-are small{font-size:13.5px}
 .who-you-are.manager{background:rgba(22,51,41,.95);color:#eee5cf;border:1px solid #c6a36580}
 .who-you-are.manager:after{border-top-color:rgba(22,51,41,.95)}
+
+/* Low graphics skips the post-processing pass; the same dark edge is drawn by the page instead, for free. */
+.world.graphics-low:after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 52%,rgba(4,12,10,.55) 100%)}
+/* The camera frames the character's face in the middle of the screen; their name sits in the empty left column instead of over it. */
+@media(min-width:801px){.character-label{left:45px;top:180px}}

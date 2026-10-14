@@ -4,7 +4,7 @@ import { Vector3 } from 'three';
 import gsap from 'gsap';
 import { useGame } from '../store';
 import { CAST } from '../contract';
-import { playerPosition } from './Actor';
+import { playerPosition } from './shared';
 export default function Camera() {
  const {camera}=useThree();const phase=useGame(s=>s.phase),active=useGame(s=>s.active),reduced=useGame(s=>s.reduced),delegated=useGame(s=>s.delegateAt),cine=useGame(s=>s.cine?.at??0);
  const look=useMemo(()=>new Vector3(0,3,0),[]);const transitioning=useRef(false);
@@ -20,7 +20,7 @@ export default function Camera() {
  useEffect(()=>{
   let target:Vector3|undefined,focus:Vector3|undefined;
   if(phase==='login'){target=new Vector3(-1.4,2.6,13);focus=new Vector3(-1.4,1.2,7);}
-  if(phase==='conversation'&&active){const p=new Vector3(...CAST[active].position);const direction=playerPosition.clone().sub(p).setY(0).normalize();const side=new Vector3(direction.z,0,-direction.x);target=p.clone().addScaledVector(direction,4.3).addScaledVector(side,-2.25);target.y=p.y+2.0;focus=p.clone().add(new Vector3(-.2,1.15,0));sideways.copy(side);}
+  if(phase==='conversation'&&active){const p=new Vector3(...CAST[active].position);const direction=new Vector3(playerPosition.x,playerPosition.y,playerPosition.z).sub(p).setY(0).normalize();const side=new Vector3(direction.z,0,-direction.x);target=p.clone().addScaledVector(direction,4.3).addScaledVector(side,-2.25);target.y=p.y+2.0;focus=p.clone().add(new Vector3(-.2,1.15,0));sideways.copy(side);}
   if(phase==='ending'||phase==='end'){target=new Vector3(16,12,24);focus=new Vector3(0,5,0);}
   // The doors get a shot of their own: square on, a little below eye level, so both leaves are seen swinging in.
   let seconds=phase==='ending'?2.5:1.2;

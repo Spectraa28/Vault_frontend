@@ -8,10 +8,7 @@ import { type Act, actStage, useGame } from '../store';
 import { C } from './primitives';
 import { footfall, key as keyTap } from '../sound';
 
-export const playerPosition = new Vector3(1.2, 1, 6.3);
-/** Lets the recorded tour place the visitor. The Player sets it while mounted. */
-export const playerControl: { teleport?: (x: number, y: number, z: number) => void } = {};
-export const playerMotion = { speed: 0 };
+import { playerMotion, playerPosition } from './shared';
 
 type Vec = [number, number, number];
 const damp = MathUtils.damp;
@@ -327,12 +324,12 @@ export function Figure({ look, live, player = false }: { look: Look; live?: RefO
 /* ------------------------------------------------------------------ staff */
 
 /** Where a character goes, and which way they face, to carry out a tool call. Coordinates are world space. */
-interface Station { at: Vec; face: number }
+interface Station { at: Vec; face: number; /** A corner to walk past on the way, when the straight line would cross furniture. */ via?: Vec }
 const STATIONS: Record<string, Partial<Record<string, Station>>> = {
   'door-guard': {
     check_visitor_list: { at: [3.55, 0, 3.75], face: Math.atan2(0.85, -0.45) },      // the night register on the desk
     open_public_entrance: { at: [2.75, 0, 1.25], face: Math.PI - 0.25 },             // the brass key panel by the doors
-    open_staff_entrance: { at: [2.75, 0, 1.25], face: Math.PI - 0.25 },
+    open_staff_entrance: { at: [5.4, 0, 1.6], face: Math.PI, via: [3.15, 0, 2.35] }, // the staff door, round the front of the desk
     issue_staff_badge: { at: [3.55, 0, 3.75], face: Math.atan2(0.85, -0.45) },
   },
   cashier: {
@@ -359,6 +356,7 @@ const WALK_SPEED = 3.2, RUN_SPEED = 7.5;
 function useStaff(id: Character | 'junior-teller', home: Vec, homeFace: number | null, pace = WALK_SPEED) {
   const root = useRef<Group>(null), live = useRef<FigureState>({});
   const at = useRef(new Vector3(...home)), facing = useRef(homeFace ?? 0);
+  const route = useRef<{ point: Vec; tool: string; reached: boolean } | null>(null);
   const heard = useRef({ step: 0, key: 0 });
   useFrame((_, dt) => {
     const s = useGame.getState(), now = Date.now();
@@ -369,8 +367,16 @@ function useStaff(id: Character | 'junior-teller', home: Vec, homeFace: number |
     const cold = id !== 'junior-teller' && (s.coldUntil[id] ?? 0) > now;
 
     // Walk to the station while the call is live, and back to the post afterwards.
-    const goal = station ? station.at : home;
+    // A station with a corner is reached by way of it, and left the same way.
+    let goal: Vec = station ? station.at : home;
+    if (station?.via && mine) {
+      if (route.current?.tool !== mine.tool) route.current = { point: station.via, tool: mine.tool, reached: false };
+      if (!route.current.reached) goal = station.via;
+    } else if (!station && route.current) {
+      if (route.current.reached) goal = route.current.point; else route.current = null;
+    }
     const dx = goal[0] - at.current.x, dz = goal[2] - at.current.z, dist = Math.hypot(dx, dz);
+    if (route.current && dist < 0.1) { if (station && !route.current.reached) route.current.reached = true; else if (!station) route.current = null; }
     const step = Math.min(dist, pace * dt * (s.reduced ? 50 : 1));
     if (dist > 0.02) { at.current.x += dx / dist * step; at.current.z += dz / dist * step; }
     at.current.y = damp(at.current.y, goal[1], s.reduced ? 60 : 3.2, dt);

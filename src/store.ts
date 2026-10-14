@@ -15,7 +15,7 @@ interface GameState {
   customer: Customer;
   area: Area; near: Character | null; active: Character | null; busy: boolean; roleBusy: boolean; error: string; retryUntil: number;
   slips: Slip[]; turnStartSlip: number; reply: Reply | null; lastLine: string; mood: Mood; trust: number | null; summary: Summary | null;
-  graphics: 'High' | 'Medium' | 'Low'; muted: boolean; reduced: boolean; vaultAttempt: number; delegateAt: number;
+  graphics: Graphics; muted: boolean; reduced: boolean; vaultAttempt: number; delegateAt: number;
   act: Act | null; speakUntil: number;
   /** A short scripted shot, such as the doors opening. While it runs the dialogue steps aside. */
   cine: { shot: 'door'; at: number } | null; fade: boolean;
@@ -30,8 +30,16 @@ export function updateSlips(slips: Slip[], e: GameEvent): Slip[] {
   if (index < 0) return slips; // Do not invent an attempt when no matching tool event was received.
   return slips.map((s, i) => i !== index ? s : e.type === 'hold' ? { ...s, decision: 'held', heldAt: Date.now() } : { ...s, decision: e.decision, layer: e.layer, reason: e.reason, heldAt: e.decision === 'held' ? Date.now() : undefined });
 }
+export type Graphics = 'Medium' | 'Low';
+/** Low unless the player picked Medium before: the game should run on any laptop first, and look nicer by choice. */
+function savedGraphics(): Graphics {
+  try { return localStorage.getItem('vault-graphics') === 'Medium' ? 'Medium' : 'Low'; } catch { return 'Low'; }
+}
+export function saveGraphics(g: Graphics): void {
+  try { localStorage.setItem('vault-graphics', g); } catch { /* private mode: the choice lasts this visit only */ }
+}
 export const useGame = create<GameState>((set, get) => ({
-  ...initial, graphics: 'Medium', muted: false, reduced: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  ...initial, graphics: savedGraphics(), muted: false, reduced: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   set,
   event: e => {
     const s = get();

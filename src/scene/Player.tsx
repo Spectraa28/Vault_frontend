@@ -5,7 +5,8 @@ import { Html, useKeyboardControls } from '@react-three/drei';
 import { WhoYouAre } from '../IdCard';
 import { CAST, type Character } from '../contract';
 import { useGame } from '../store';
-import { Figure, LOOKS, playerControl, playerMotion, playerPosition } from './Actor';
+import { Figure, LOOKS } from './Actor';
+import { playerControl, playerMotion, playerPosition } from './shared';
 import { ambience, footfall, listener } from '../sound';
 export default function Player() {
  const ref=useRef<CustomEcctrlRigidBody>(null); const lastStep=useRef(0); const [,keys]=useKeyboardControls();
@@ -14,7 +15,7 @@ export default function Player() {
  useEffect(()=>{playerControl.teleport=(x,y,z)=>{const body=ref.current?.group;if(!body)return;body.setTranslation({x,y,z},true);body.setLinvel({x:0,y:0,z:0},true);};return()=>{playerControl.teleport=undefined;};},[]);
  useFrame(({clock},dt)=>{
   if(!ref.current?.group)return;
-  const body=ref.current.group,p=body.translation();playerPosition.set(p.x,p.y,p.z);listener(p.x,p.y,p.z);
+  const body=ref.current.group,p=body.translation();Object.assign(playerPosition,{x:p.x,y:p.y,z:p.z});listener(p.x,p.y,p.z);
   const v=body.linvel();playerMotion.speed=phase==='play'?Math.hypot(v.x,v.z):0;
   const s=useGame.getState();
   if(phase==='play'){

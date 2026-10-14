@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Color, Group, MathUtils, MeshStandardMaterial, type PointLight } from 'three';
 import { type Act, actStage, useGame } from '../store';
-import { Box, C, Cylinder } from './primitives';
+import { Box, C, Cylinder, Label } from './primitives';
 
 type Vec = [number, number, number];
 const STATE = { idle: '#6b5a33', working: '#ffc04d', held: '#ff9d2e', allowed: '#3fd17a', refused: '#ff3b2f' } as const;
@@ -32,12 +32,55 @@ export function StatusLight({ at, who, tools, size = 0.06 }: { at: Vec; who: Act
 /** The brass key panel beside the bank doors. Gus works it; the lamp shows what came back. */
 export function KeyPanel({ at }: { at: Vec }) {
   const lever = useRef<Group>(null);
-  useFrame((_, dt) => { const stage = stageFor('door-guard', ['open_public_entrance', 'open_staff_entrance'], Date.now()); if (lever.current) lever.current.rotation.x = MathUtils.damp(lever.current.rotation.x, stage === 'working' || stage === 'allowed' ? -1.1 : 0.5, 8, dt); });
+  useFrame((_, dt) => { const stage = stageFor('door-guard', ['open_public_entrance'], Date.now()); if (lever.current) lever.current.rotation.x = MathUtils.damp(lever.current.rotation.x, stage === 'working' || stage === 'allowed' ? -1.1 : 0.5, 8, dt); });
   return <group position={at}>
     <Box size={[0.42, 0.62, 0.1]} color={C.brass} metal={0.75} rough={0.3}/>
     <Box at={[0, 0.02, 0.055]} size={[0.3, 0.42, 0.02]} color="#12211d"/>
     <group ref={lever} position={[0, -0.1, 0.07]}><Cylinder at={[0, 0.11, 0]} radius={0.018} height={0.24}/><mesh position={[0, 0.24, 0]}><sphereGeometry args={[0.04, 10, 10]}/><meshStandardMaterial color="#8b1e16"/></mesh></group>
-    <StatusLight at={[0, 0.2, 0.07]} who="door-guard" tools={['open_public_entrance', 'open_staff_entrance']}/>
+    <StatusLight at={[0, 0.2, 0.07]} who="door-guard" tools={['open_public_entrance']}/>
+  </group>;
+}
+
+/**
+ * The staff entrance beside the main doors. Its lamp burns red while the door is locked, flickers
+ * amber while Gus tries it and flashes when the bank refuses. It goes green, and the door swings
+ * open, only if the bank's own record says the door was opened.
+ */
+export function StaffDoor({ at }: { at: Vec }) {
+  const leaf = useRef<Group>(null), glow = useRef<PointLight>(null);
+  const lamp = useMemo(() => new MeshStandardMaterial({ color: '#2a1410', emissive: new Color(STATE.refused), emissiveIntensity: 1 }), []);
+  const opened = useGame(s => s.slips.some(x => x.tool === 'open_staff_entrance' && x.executed));
+  useFrame(({ clock }, dt) => {
+    const stage = stageFor('door-guard', ['open_staff_entrance'], Date.now());
+    const trying = stage === 'working' || stage === 'held';
+    const colour = trying ? STATE.working : opened || stage === 'allowed' ? STATE.allowed : STATE.refused;
+    const t = clock.elapsedTime;
+    const k = stage === 'refused' ? 3.6 + Math.sin(t * 22) * 1.8 : trying ? 1.8 + Math.sin(t * 11) * 1.2 : 1.1 + Math.sin(t * 1.6) * 0.15;
+    lamp.emissive.set(colour);
+    lamp.emissiveIntensity = k;
+    if (glow.current) { glow.current.color.set(colour); glow.current.intensity = k * 0.8; }
+    if (leaf.current) leaf.current.rotation.y = MathUtils.damp(leaf.current.rotation.y, opened ? 1.25 : 0, 3, dt);
+  });
+  return <group position={at}>
+    <Box at={[0, 2.06, 0.02]} size={[1.5, 3.8, 0.04]} color="#050d0b"/>
+    {[-0.8, 0.8].map(x => <Box key={x} at={[x, 2.06, 0.06]} size={[0.1, 3.9, 0.12]} color={C.brass} metal={0.7}/>)}
+    <Box at={[0, 4.05, 0.06]} size={[1.7, 0.14, 0.14]} color={C.brass} metal={0.7}/>
+    <group ref={leaf} position={[0.72, 0, 0.05]}>
+      <Box at={[-0.72, 2.06, 0]} size={[1.42, 3.76, 0.08]} color="#1d3a32" metal={0.3} rough={0.35}/>
+      <Box at={[-0.72, 3.15, 0.05]} size={[0.62, 0.55, 0.02]} color="#0b1d19" metal={0.5} rough={0.15}/>
+      {[-0.92, -0.72, -0.52].map(x => <Box key={x} at={[x, 3.15, 0.07]} size={[0.025, 0.55, 0.02]} color={C.brass}/>)}
+      <Box at={[-0.72, 0.4, 0.05]} size={[1.3, 0.3, 0.02]} color={C.brass} metal={0.75}/>
+      <Cylinder at={[-1.28, 2.0, 0.1]} radius={0.03} height={0.5} color={C.brass}/>
+    </group>
+    <Box at={[0, 4.36, 0.08]} size={[1.3, 0.34, 0.04]} color="#122a24"/>
+    <Label at={[0, 4.36, 0.11]} size={0.15}>STAFF ONLY</Label>
+    {/* The lock, at eye height beside the door: the lamp is the first thing anyone looks at. */}
+    <group position={[-1.02, 2.3, 0.08]}>
+      <Box size={[0.24, 0.46, 0.06]} color={C.brass} metal={0.75} rough={0.3}/>
+      <Box at={[0, -0.1, 0.035]} size={[0.14, 0.16, 0.01]} color="#12211d"/>
+      <mesh position={[0, 0.11, 0.06]}><sphereGeometry args={[0.065, 16, 12]}/><primitive object={lamp} attach="material"/></mesh>
+    </group>
+    <pointLight ref={glow} position={[-1.02, 2.4, 0.6]} distance={2.6} intensity={1}/>
   </group>;
 }
 

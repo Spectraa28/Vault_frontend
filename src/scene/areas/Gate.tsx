@@ -6,7 +6,7 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import { Group, MathUtils } from 'three';
 import { useGame } from '../../store';
 import { Box, C, Cylinder, Floor, Label, Lamp } from '../primitives';
-import { KeyPanel, Register } from '../props';
+import { KeyPanel, Register, StaffDoor } from '../props';
 export default function Gate() {
   const left = useRef<Group>(null), right = useRef<Group>(null), openAt = useRef(0);
   const unlocked = useGame(s => s.unlocked.includes('cashier'));
@@ -40,7 +40,7 @@ export default function Gate() {
       {[-.16,0,.16].map(v=><Box key={v} at={[v,4.4,.29]} size={[.035,7.3,.025]} color={C.brass} metal={.6}/>)}
       <Box at={[0,8.3,0]} size={[.9,.28,.8]} color={C.brass}/>
     </group>)}
-    {[-5.55,5.55].map(x=><group key={x}>
+    {[-5.55].map(x=><group key={x}>
       <Box at={[x,4.1,.53]} size={[2,4.6,.1]} color="#091d1a"/>
       {[-.9,.9].map(v=><Box key={v} at={[x+v,4.1,.6]} size={[.06,4.7,.06]} color={C.brass}/>)}
       {[2,4.1,6.3].map(y=><Box key={y} at={[x,y,.6]} size={[1.85,.06,.06]} color={C.brass}/>)}
@@ -60,6 +60,7 @@ export default function Gate() {
     <group position={[4.4,0,3.3]}><Box at={[0,.65,0]} size={[1.4,1.3,.9]} color={C.green} solid/><Lamp at={[0,1.32,0]}/><Label at={[0,.7,.46]} size={.14}>NIGHT WATCH</Label></group>
     <Register at={[4.25,1.345,3.3]}/>
     <KeyPanel at={[2.62,1.5,.78]}/>
+    <StaffDoor at={[5.55,0,.5]}/>
     {[-10,10].map(x=><group key={x}><Cylinder at={[x,2.5,5]} radius={.065} height={5}/><mesh position={[x,5.1,5]}><sphereGeometry args={[.3,12,12]}/><meshStandardMaterial color="#ffdc9b" emissive="#ffbf60" emissiveIntensity={3}/></mesh><pointLight position={[x,4.9,5]} color="#ffbf80" intensity={24} distance={11}/></group>)}
     <Box at={[-12,4,-5]} size={[6,8,9]} color="#1a292d"/><Box at={[12,5,-5]} size={[6,10,9]} color="#1a292d"/>
     <Label at={[8.3,6,1]} size={.3} color="#bde5d2">OPEN LATE</Label>

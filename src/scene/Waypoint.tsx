@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Group, InstancedMesh, Object3D } from 'three';
 import { objectiveFor, routeTo, standPoint, trail, type Vec } from '../guide';
 import { useGame } from '../store';
-import { playerPosition } from './Actor';
+import { playerPosition } from './shared';
 import { C } from './primitives';
 
 const MAX = 70;

@@ -3,7 +3,7 @@ import { AUTO, bank } from './api';
 import { CAST } from './contract';
 import { useGame } from './store';
 import { sound } from './sound';
-import { playerControl } from './scene/Actor';
+import { playerControl } from './scene/shared';
 
 /**
  * Plays the recorded tour hands-free: signs in, walks the visitor to each character in the order
