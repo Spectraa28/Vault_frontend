@@ -3,7 +3,8 @@ const REPLAY = new URLSearchParams(typeof location === 'undefined' ? '' : locati
 export const MOCK = REPLAY === '1' || REPLAY === 'auto';
 /** ?replay=auto plays the recorded tour without the viewer touching anything. */
 export const AUTO = REPLAY === 'auto';
-const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8787').replace(/\/$/, '');
+// In development the API runs on its own port; a production build is served by the back end itself, so it asks its own address.
+const BASE = (import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8787' : '')).replace(/\/$/, '');
 
 /** Handles byte-split UTF-8, CRLF, comments and multiline SSE data fields. */
 export async function readEvents(stream: ReadableStream<Uint8Array>, receive: (event: GameEvent) => void, signal?: AbortSignal) {
