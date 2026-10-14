@@ -5,7 +5,8 @@ random.seed(1931)
 out = Path(__file__).resolve().parent.parent / 'public' / 'audio'
 out.mkdir(parents=True, exist_ok=True)
 rate = 22050
-for name, seconds in [('gate',8),('lobby',8),('vault',8),('printer',1),('stamp',.25),('door',.6),('groan',2.7),('chime',1.8),('wet',.16),('marble',.2),('concrete',.16),('thunder',4)]:
+# Music, footsteps and key taps are made by make-sound.py. This file keeps only the interface effects.
+for name, seconds in [('printer',1),('stamp',.25),('door',.6),('groan',2.7),('chime',1.8)]:
     data=[]; low=0
     for i in range(int(rate*seconds)):
         t=i/rate; noise=random.uniform(-1,1); low=.97*low+.03*noise
