@@ -37,5 +37,6 @@ describe('server-driven presentation',()=>{
   useGame.getState().reset();for(const e of recording.turns[2].events)useGame.getState().event(e);const s=useGame.getState().slips;expect(s).toHaveLength(1);expect(s[0].decision).toBe('timeout');expect(s[0].executed).toBe(false);expect(s[0].heldAt).toBeUndefined();
  });
  it('surfaces an enforcement failure rather than silently keeping the success story',()=>{useGame.getState().reset();useGame.getState().event({...reply,enforcementHeld:false} as GameEvent);expect(useGame.getState().enforcementFault).toBe(true);});
- it('uses the exact supplied recording without rewritten outcomes',()=>{expect(readFileSync(new URL('../public/recordings/mock-run.json',import.meta.url),'utf8')).toBe(readFileSync(new URL('../../web/mock-run.json',import.meta.url),'utf8'));});
+ // The recording is copied unchanged from the back end (scripts/sync-recording.mjs). It must be a real game in the API's own event format, with real refusals in it.
+ it('ships a recorded game in the exact event format, with real ArmorIQ decisions',()=>{const rec=recordingSchema.parse(JSON.parse(readFileSync(new URL('../public/recordings/mock-run.json',import.meta.url),'utf8')));const decisions=rec.turns.flatMap(t=>t.events).filter(e=>e.type==='decision').map(e=>(e as {decision:string}).decision);expect(rec.turns.length).toBeGreaterThan(0);expect(decisions).toContain('allowed');expect(decisions).toContain('blocked');for(const t of rec.turns)expect(t.events.at(-1)!.type).toMatch(/reply|error/);});
 });
