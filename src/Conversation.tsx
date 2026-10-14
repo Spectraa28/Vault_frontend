@@ -20,6 +20,8 @@ export default function Conversation(){
  const nowhere=!MOCK||next?'':upcoming?`Nothing was recorded for ${cast.name} as the ${s.role}. The tour continues with ${CAST[upcoming.request.character].name}, signed in as the ${upcoming.request.role}.`:'The recorded tour is finished. Use “Leave the bank” to see how the night went.';
  const speech=useSpeech(setText,m=>s.set({error:m}));
  useEffect(()=>{const t=setTimeout(()=>input.current?.focus(),s.reduced?0:1250);return()=>clearTimeout(t);},[character,s.reduced]);
+ // Each character says their opening line aloud as the dialogue appears. Recorded once in their own voice (scripts/make-greetings.mts), so it costs nothing and starts at once.
+ useEffect(()=>{if(useGame.getState().reply)return;const t=setTimeout(()=>voice(`/audio/voice/${character}.mp3`),s.reduced?0:700);return()=>clearTimeout(t);},[character]);
  useEffect(()=>{setText(MOCK?(next?.request.text??''):'');},[character,s.role,revision,next]);
  useEffect(()=>{if(!s.busy){setElapsed(0);return;}const t=setInterval(()=>setElapsed(n=>n+1),1000);return()=>clearInterval(t);},[s.busy]);
  useEffect(()=>{

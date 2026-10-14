@@ -59,7 +59,7 @@ export const useGame = create<GameState>((set, get) => ({
       ...(e.type === 'hold' && s.act && { act: { ...s.act, stage: 'held' as const, at: Date.now() } }),
       ...(e.type === 'decision' && s.act && s.act.tool === e.tool && { act: { ...s.act, stage: ['allowed', 'approved'].includes(e.decision) ? 'allowed' as const : 'refused' as const, at: Date.now() } }), ...(e.type === 'tool' && e.tool === 'open_vault' && { vaultAttempt: s.vaultAttempt + 1 }), ...(((e.type === 'decision' && e.tool === 'ask_junior_teller' && ['allowed','approved'].includes(e.decision)) || (e.type === 'tool' && e.delegatedTo && !s.delegateAt)) && { delegateAt: Date.now() }) });
   },
-  talk: id => { const s = get(); if (s.busy || !s.unlocked.includes(id) || (s.coldUntil[id] ?? 0) > Date.now()) return; set({ phase: 'conversation', active: id, reply: null, lastLine: '', error: '', mood: 'wary', trust: null, delegateAt: 0, act: null, speakUntil: Date.now() + 2600 }); },
+  talk: id => { const s = get(); if (s.busy || !s.unlocked.includes(id) || (s.coldUntil[id] ?? 0) > Date.now()) return; set({ phase: 'conversation', active: id, reply: null, lastLine: '', error: '', mood: 'wary', trust: null, delegateAt: 0, act: null, speakUntil: Date.now() + 700 + CAST[id].greeting.length * 62 }); },
   leave: () => set({ phase: 'play', active: null, cine: null }),
   reset: () => set({ ...initial }),
 }));
