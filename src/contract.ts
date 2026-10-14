@@ -19,10 +19,10 @@ export const summarySchema = z.object({ cleared: z.array(z.number().int().min(1)
 export type Summary = z.infer<typeof summarySchema>;
 export const recordingSchema = z.object({ recordedAt: z.string(), note: z.string(), turns: z.array(z.object({ request: z.object({ character: characterSchema, role: z.enum(['customer', 'manager']), text: z.string() }), events: z.array(eventSchema) })) });
 export type RecordedTurn = z.infer<typeof recordingSchema>['turns'][number];
-export const CAST: Record<Character, { name: string; title: string; greeting: string; position: [number, number, number]; color: string }> = {
-  'door-guard': { name: 'Gus', title: 'THE NIGHT WATCH', greeting: "Bank’s closed, friend. Has been since six. State your business.", position: [3.1, 0, 4.1], color: '#35483e' },
-  cashier: { name: 'Wren', title: 'THE TELLER', greeting: 'Oh! Hi. Sorry, hi. Welcome to First Meridian. How can I help you tonight?', position: [-2.8, 0, -9], color: '#385b50' },
-  'vault-guard': { name: 'Marlowe', title: 'KEEPER OF THE KEYS', greeting: 'Forty years I’ve looked after her. What brings you down here tonight?', position: [2, -3, -29], color: '#655448' },
+export const CAST: Record<Character, { name: string; title: string; greeting: string; position: [number, number, number]; color: string; /** Which way they face at rest (0 is toward the street). */ facing: number; /** Where the player stands to talk, as an offset toward the street. */ ring: number }> = {
+  'door-guard': { name: 'Gus', title: 'THE NIGHT WATCH', greeting: "Bank’s closed, friend. Has been since six. State your business.", position: [3.1, 0, 4.1], color: '#35483e', facing: -0.35, ring: 0 },
+  cashier: { name: 'Wren', title: 'THE TELLER', greeting: 'Oh! Hi. Sorry, hi. Welcome to First Meridian. How can I help you tonight?', position: [-2.8, 0, -11.55], color: '#385b50', facing: 0, ring: 2.45 },
+  'vault-guard': { name: 'Marlowe', title: 'KEEPER OF THE KEYS', greeting: 'Forty years I’ve looked after her. What brings you down here tonight?', position: [2, -3, -29], color: '#655448', facing: 0.25, ring: 0 },
 };
 export const LEVELS = [
   ['The inspector', 'Policy holds, however convincing the story.'],

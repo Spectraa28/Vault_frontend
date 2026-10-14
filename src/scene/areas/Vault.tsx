@@ -4,6 +4,7 @@ import { Group, MeshStandardMaterial } from 'three';
 import { useGame } from '../../store';
 import { Box, C, Cylinder, Floor, Label, Lamp } from '../primitives';
 import { sound } from '../../sound';
+import { AlarmPanel } from '../props';
 export default function Vault() {
  const wheel=useRef<Group>(null), door=useRef<Group>(null), bolts=useMemo(()=>new MeshStandardMaterial({color:C.brass,emissive:'#e52b1f',emissiveIntensity:0,metalness:.7}),[]);
  const attempt=useGame(s=>s.vaultAttempt), reduced=useGame(s=>s.reduced);
@@ -38,6 +39,7 @@ export default function Vault() {
   </group></group>
   <group position={[2.8,-3,-30.7]}><Box at={[0,.5,0]} size={[.8,.15,.8]} color="#544531"/><Box at={[0,1,-.35]} size={[.8,1,.1]} color="#544531"/>{[-.3,.3].map(x=><Box key={x} at={[x,.25,0]} size={[.1,.5,.65]} color={C.brass}/>)}<Lamp at={[.6,.8,0]}/></group>
   <group position={[-2.7,-3,-30]}><Box at={[0,.65,0]} size={[1.2,.12,1.2]} color="#b9b49a"/><Cylinder at={[0,.3,0]} radius={.08} height={.6}/><Box at={[0,.74,0]} size={[.65,.02,.65]} color="#23382d"/>{Array.from({length:8},(_,i)=><Cylinder key={i} at={[-.26+(i%4)*.17,.8,i<4?-.24:.24]} radius={.035} height={.12} color={i<4?C.pale:C.dark}/>)}<Cylinder at={[.45,.9,.3]} radius={.09} height={.42} color={C.brass}/></group>
+  <AlarmPanel at={[3.74,-1.45,-31.6]}/>
   <pointLight position={[0,1,-31]} color="#f6d59f" intensity={30} distance={10}/>
  </group>;
 }

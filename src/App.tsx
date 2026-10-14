@@ -1,10 +1,12 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { bank, MOCK } from './api';
+import { AUTO, bank, MOCK } from './api';
 import { CAST, LEVELS, type Role } from './contract';
 import { useGame } from './store';
 import { ambience, mute, sound, stopAudio } from './sound';
 import Conversation, { cancelTurn } from './Conversation';
+import Autoplay from './Autoplay';
+import { Briefing, ObjectiveCard } from './Guide';
 const TouchControls=lazy(()=>import('./TouchControls'));
 const World=lazy(()=>import('./scene/World'));
 class SceneBoundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}render(){return this.state.failed?<div className="webgl-error"><h2>The scene couldn’t load.</h2><p>Check WebGL and hardware acceleration, then reload the bank.</p><button onClick={()=>location.reload()}>Reload</button></div>:this.props.children;}}
@@ -13,7 +15,7 @@ function Title(){const s=useGame();return <section className="title-screen">
  <header className="opening-header"><div className="wordmark">FIRST MERIDIAN<span>BANK & TRUST</span></div><span className="edition">AN EXPERIMENT IN PERSUASION</span></header>
  <div className="title-copy"><Crest/><p className="eyebrow">ONE NIGHT. THREE INSIDERS. NO WAY OUT.</p><h1>The<br/><em>Vault</em><span className="title-period">.</span></h1><div className="title-rule"><span/><b>EST. MCMXXXI</b><span/></div><p className="premise">Everyone has a weakness.<br/>The vault has <em>ArmorIQ.</em></p><button className="primary-button walk-in" onClick={()=>{ambience('gate');s.set({phase:'login'});}}>Walk in <span>⟶</span></button><p className="title-note">A game of silver tongues & iron rules.</p></div>
  <div className="opening-caption"><span>FIRST MERIDIAN, AFTER HOURS</span><p>The staff can be persuaded.<br/>Permission cannot.</p><div className="caption-line"/></div>
- <footer className="opening-footer"><span>BUILT ON TRUST.<br/><b>TESTED BY YOU.</b></span><div className="mode-choice">{MOCK?<><span className="replay-dot"/>RECORDED TOUR <a href="/">Switch to live game ↗</a></>:<>LIVE GAME <a href="/?replay=1">Try the recorded tour ↗</a></>}</div><span>POWERED BY <b>ArmorIQ</b></span></footer>
+ <footer className="opening-footer"><span>BUILT ON TRUST.<br/><b>TESTED BY YOU.</b></span><div className="mode-choice">{MOCK?<><span className="replay-dot"/>RECORDED TOUR <a href="/">Switch to live game ↗</a></>:<>LIVE GAME <a href="/?replay=auto">Watch the recorded tour ↗</a> <a href="/?replay=1">or step through it ↗</a></>}</div><span>POWERED BY <b>ArmorIQ</b></span></footer>
  </section>;}
 function Login(){
  const s=useGame();const [name,setName]=useState(s.name),[role,setRole]=useState<Role>(s.role),[code,setCode]=useState(''),[needsCode,setNeedsCode]=useState(false),[loading,setLoading]=useState(false),[health,setHealth]=useState<'loading'|'ready'|'error'>('loading');
@@ -34,7 +36,7 @@ function HUD(){
  async function leave(){if(s.busy||s.roleBusy)return;s.set({roleBusy:true,error:''});try{const summary=await bank.summary(s.gameId);s.set({summary,phase:'ending'});await bank.close(s.gameId);}catch(e){s.set({error:(e as Error).message});}finally{s.set({roleBusy:false});}}
  return <>
   <header className={`game-hud ${s.phase==='conversation'?'conversation-hud':''}`}><div className="player-id"><span className="id-monogram">M</span><div><span className="eyebrow">TONIGHT’S VISITOR</span><strong>{s.name}</strong></div><motion.button key={s.role} initial={s.reduced?false:{rotateY:90}} animate={{rotateY:0}} className="role-badge" onClick={()=>void flip()} disabled={s.busy||s.roleBusy} aria-label={`Current role ${s.role}. Switch to ${s.role==='customer'?'manager':'customer'}`}>{s.role}<span>↻</span></motion.button></div><div className="level-medallions" aria-label={`${s.cleared.length} of five levels shown`}>{LEVELS.map((l,i)=><span key={i} className={s.cleared.includes(i+1)?'lit':''} title={`${i+1}. ${l[0]}${s.cleared.includes(i+1)?' · Shown':''}`}>{['I','II','III','IV','V'][i]}</span>)}</div></header>
-  {s.phase==='play'&&<><div className="area-label"><span>{s.area==='gate'?'01 / THE GATE':s.area==='lobby'?'02 / THE LOBBY':'03 / THE VAULT'}</span><p>{s.area==='gate'?'Make a good first impression.':s.area==='lobby'?'A little paper can cause a lot of trouble.':'Every story ends at this door.'}</p></div>{s.busy&&<div className="background-wait" role="status">The character is still working<span className="ellipsis">…</span> Receipts are being saved.</div>}<div className="movement-guide"><span><kbd>W A S D</kbd> Move</span><span><kbd>SHIFT</kbd> Jog</span><span><kbd>E</kbd> Talk</span><span><kbd>Q / R</kbd> Look</span></div><Suspense fallback={null}><TouchControls/></Suspense>{s.near&&<button className="touch-talk" onClick={()=>s.talk(s.near!)}>Talk to {CAST[s.near].name}</button>}</>}
+  {s.phase==='play'&&<><div className="area-label"><span>{s.area==='gate'?'01 / THE GATE':s.area==='lobby'?'02 / THE LOBBY':'03 / THE VAULT'}</span><p>{s.area==='gate'?'Make a good first impression.':s.area==='lobby'?'A little paper can cause a lot of trouble.':'Every story ends at this door.'}</p></div><ObjectiveCard/>{s.busy&&<div className="background-wait" role="status">The character is still working<span className="ellipsis">…</span> Receipts are being saved.</div>}<div className="movement-guide"><span><kbd>W A S D</kbd> Move</span><span><kbd>SHIFT</kbd> Jog</span><span><kbd>E</kbd> Talk</span><span><kbd>DRAG</kbd> Look</span><span><kbd>SCROLL</kbd> Zoom</span><span><kbd>Q R Z X</kbd> Turn / tilt</span></div><Suspense fallback={null}><TouchControls/></Suspense>{s.near&&<button className="touch-talk" onClick={()=>s.talk(s.near!)}>Talk to {CAST[s.near].name}</button>}</>}
   <div className="utility-hud"><button aria-label={s.muted?'Unmute audio':'Mute audio'} onClick={()=>{s.set({muted:!s.muted});mute(!s.muted);}}>{s.muted?'Sound off':'Sound on'}</button><button onClick={()=>setHelp(!help)} aria-expanded={help}>Controls</button><label className="quality-label">Graphics<select value={s.graphics} onChange={e=>s.set({graphics:e.target.value as typeof s.graphics})}><option>High</option><option>Medium</option><option>Low</option></select></label><button className="leave-bank" disabled={s.busy||s.roleBusy} onClick={()=>void leave()}>Leave the bank ↗</button></div>
   {help&&<div className="help-panel" role="dialog" aria-label="Controls"><button className="help-close" onClick={()=>setHelp(false)} aria-label="Close controls">×</button><h2>A brief orientation.</h2><p>Walk with WASD or arrow keys. Hold Shift to jog. Drag the scene or use Q / R to orbit. A connected gamepad also works.</p><p>Approach a character and press E. Type a line and press Enter to send; Shift + Enter adds a line. Hold the microphone to dictate, then review before sending. Escape leaves.</p><p>The tape records server decisions. Your role badge changes your signed-in role. Lit medallions show the security boundaries you have demonstrated.</p>{MOCK&&<p>Recorded mode replays original lines. It doesn’t evaluate new input. Holds are shortened to 12 seconds for the tour.</p>}</div>}
  </>;
@@ -49,9 +51,12 @@ export default function App(){
  return <main ref={root} tabIndex={-1} className={`app phase-${s.phase} ${s.reduced?'reduced-motion':''} ${s.slips.some(a=>a.decision==='held')?'on-hold':''}`}>
   <SceneBoundary><Suspense fallback={<div className="loading-screen"><img src="/vault.svg" alt=""/><span>OPENING THE BANK</span></div>}><World/></Suspense></SceneBoundary>
   <div className="screen-grain"/><div className="screen-frame"/>
-  {MOCK&&<div className="recording-label"><span/> RECORDED REPLAY <b>13 OCT 2026 · SAVED OUTCOMES</b></div>}
+  {MOCK&&<div className="recording-label"><span/> RECORDED REPLAY <b>13 OCT 2026 · SAVED OUTCOMES{AUTO?' · PLAYING AUTOMATICALLY, PRESS ANY KEY TO TAKE OVER':''}</b></div>}
+  <Autoplay/>
   {s.phase==='title'&&<Title/>}{s.phase==='login'&&<Login/>}{['play','conversation'].includes(s.phase)&&<HUD/>}{s.phase==='conversation'&&s.active&&<Conversation/>}{s.phase==='end'&&<End/>}
+  <Briefing/>
   <Notices/>
+  <div className={`cut-fade ${s.fade?'on':''}`} aria-hidden="true"/>
   {s.enforcementFault&&<div className="enforcement-error" role="alert">Enforcement failure reported by the bank. The visual vault is not proof of safety; check the server’s attempt record.</div>}
   {s.error&&<div className="error-toast" role="alert"><span>{s.error}</span><button onClick={()=>s.set({error:''})} aria-label="Dismiss error">×</button></div>}
   <AnimatePresence><motion.div key={s.area} className="light-adaptation" initial={{opacity:s.reduced?0:.2}} animate={{opacity:0}} transition={{duration:1}}/></AnimatePresence>

@@ -1,5 +1,8 @@
 import { eventSchema, recordingSchema, startSchema, summarySchema, type Character, type GameEvent, type RecordedTurn, type Role, type Summary } from './contract';
-export const MOCK = new URLSearchParams(typeof location === 'undefined' ? '' : location.search).get('replay') === '1';
+const REPLAY = new URLSearchParams(typeof location === 'undefined' ? '' : location.search).get('replay');
+export const MOCK = REPLAY === '1' || REPLAY === 'auto';
+/** ?replay=auto plays the recorded tour without the viewer touching anything. */
+export const AUTO = REPLAY === 'auto';
 const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:8787').replace(/\/$/, '');
 
 /** Handles byte-split UTF-8, CRLF, comments and multiline SSE data fields. */
@@ -67,6 +70,10 @@ export class BankClient {
     if (!MOCK) return startSchema.parse(await (await request('/game', { role, name }, AbortSignal.timeout(20000), code)).json());
     this.recording = await this.loadRecording(); this.played.clear(); this.cleared.clear(); this.turns = 0;
     return { gameId: 'recorded-night-shift', unlocked: ['door-guard'] as Character[] };
+  }
+  /** The next recorded turn in the order the night happened, whoever it was with. */
+  upcoming(): RecordedTurn | undefined {
+    return this.recording?.turns.find((_, i) => !this.played.has(i));
   }
   next(character: Character, role: Role): RecordedTurn | undefined {
     return this.recording?.turns.find((t, i) => t.request.character === character && t.request.role === role && !this.played.has(i));
