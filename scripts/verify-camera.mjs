@@ -5,7 +5,7 @@ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--ena
 const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});const errors=[];
 page.on('pageerror',e=>errors.push(e.message));await page.route('**/api/**',r=>r.abort());
 try{
- await page.goto('http://127.0.0.1:5174/?exact');await page.waitForTimeout(5000);
+ await page.goto((process.env.VAULT_PREVIEW_URL||'http://127.0.0.1:5174')+'/?exact');await page.waitForTimeout(5000);
  await page.evaluate(async()=>{const url=performance.getEntriesByType('resource').find(r=>/\/src\/store\.ts(?:\?|$)/.test(r.name)).name;window.game=(await import(url)).useGame;game.getState().set({phase:'play',muted:true,unlocked:['door-guard','cashier','vault-guard']});});
  await page.getByRole('button',{name:/Understood/}).click();await page.waitForTimeout(5000);
  const result=await page.evaluate(async()=>{
