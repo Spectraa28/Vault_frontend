@@ -22,6 +22,6 @@ export default function TellerTape(){
    </motion.article>)}</AnimatePresence><div ref={end}/>
   </div>
   <div className="printer-credit"><span className="mini-shield">◇</span> Decided by <b>ArmorIQ</b></div>
-  {held&&<div className="hold-state" role="status"><div className="watch"><span/></div><div><strong>{!busy?'No final decision received':'Waiting for the manager'}</strong><span>{String(Math.floor(elapsed/60)).padStart(2,'0')}:{String(elapsed%60).padStart(2,'0')} elapsed{MOCK?' · shortened replay':''}</span><small>Only the server can resolve this hold.</small></div></div>}
+  {held&&<div className="hold-state" role="status"><div className="watch"><span/></div><div><strong>{!busy?'No final decision received':'Your request needs time to review'}</strong><span>{String(Math.floor(elapsed/60)).padStart(2,'0')}:{String(elapsed%60).padStart(2,'0')} elapsed{MOCK?' · shortened replay':''}</span><small>Please wait while our management reviews it.</small></div></div>}
  </aside>;
 }

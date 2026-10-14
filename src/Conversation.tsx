@@ -58,7 +58,7 @@ export default function Conversation(){
    {s.lastLine&&<p className="last-line">“{s.lastLine}”</p>}
    {s.reply?.delegate&&<div className="delegate-line"><span>PIP · JUNIOR TELLER</span><p>{s.reply.delegate.reply}</p></div>}
    <div className="dialogue-frame"><span className="nameplate">{cast.name}</span>
-    <div className="spoken-line" aria-live="polite">{s.busy?<div className="thinking"><span className="ellipsis">•••</span><small>{elapsed<3?'Choosing their words':s.slips.some(a=>a.decision==='held')?'The manager has the paperwork':character==='door-guard'?'Gus is checking the night register':character==='cashier'?'Wren is working through the paperwork':'Marlowe is checking the mechanism'}<span>{elapsed}s</span></small></div>:<Typewriter text={reply}/>}</div>
+    <div className="spoken-line" aria-live="polite">{s.busy?<div className="thinking"><span className="ellipsis">•••</span><small>{elapsed<3?'Choosing their words':s.slips.some(a=>a.decision==='held')?'Your request needs time to review. Please wait while our management reviews it':character==='door-guard'?'Gus is checking the night register':character==='cashier'?'Wren is working through the paperwork':'Marlowe is checking the mechanism'}<span>{elapsed}s</span></small></div>:<Typewriter text={reply}/>}</div>
     <form onSubmit={e=>{e.preventDefault();void send();}}>
      <label className="sr-only" htmlFor="player-line">Your line to {cast.name}</label>
      <Approaches character={character} onPick={line=>{setText(line);input.current?.focus();}}/>
