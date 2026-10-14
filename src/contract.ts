@@ -9,7 +9,7 @@ export const eventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('tool'), tool: z.string(), args: z.record(z.string(), z.unknown()), delegatedTo: z.string().optional() }),
   z.object({ type: z.literal('hold'), tool: z.string() }),
   z.object({ type: z.literal('decision'), tool: z.string(), decision: z.enum(['allowed', 'approved', 'blocked', 'rejected', 'timeout', 'held', 'error']), layer: z.enum(['intent', 'policy']).optional(), reason: z.string().optional(), delegatedTo: z.string().optional() }),
-  z.object({ type: z.literal('reply'), name: z.string(), reply: z.string(), mood: moodSchema, trust: z.number().int().min(0).max(5), delegate: z.object({ name: z.string(), reply: z.string() }).optional(), unlocked: z.array(characterSchema), cleared: z.array(z.number().int().min(1).max(5)), coldShoulder: z.boolean(), security: z.boolean().optional(), attempts: z.array(attemptSchema), enforcementHeld: z.boolean(), ms: z.number().nonnegative(), audioUrl: z.string().url().optional() }),
+  z.object({ type: z.literal('reply'), name: z.string(), reply: z.string(), mood: moodSchema, trust: z.number().int().min(0).max(5), delegate: z.object({ name: z.string(), reply: z.string() }).optional(), unlocked: z.array(characterSchema), cleared: z.array(z.number().int().min(1).max(5)), coldShoulder: z.boolean(), security: z.boolean().optional(), attempts: z.array(attemptSchema), enforcementHeld: z.boolean(), ms: z.number().nonnegative(), audioUrl: z.string().optional(), delegateAudioUrl: z.string().optional() }),
   z.object({ type: z.literal('error'), code: z.string(), message: z.string(), retryAfterMs: z.number().optional() }),
 ]);
 export type GameEvent = z.infer<typeof eventSchema>;

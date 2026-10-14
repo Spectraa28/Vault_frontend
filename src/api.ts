@@ -4,6 +4,8 @@ export const MOCK = REPLAY === '1' || REPLAY === 'auto';
 /** ?replay=auto plays the recorded tour without the viewer touching anything. */
 export const AUTO = REPLAY === 'auto';
 // In development the API runs on its own port; a production build is served by the back end itself, so it asks its own address.
+/** The API's address for a path it handed out, such as a voice line. */
+export const apiUrl = (path: string) => (/^https?:/.test(path) ? path : `${BASE}${path}`);
 const BASE = (import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8787' : '')).replace(/\/$/, '');
 
 /** Handles byte-split UTF-8, CRLF, comments and multiline SSE data fields. */
@@ -79,9 +81,9 @@ export class BankClient {
   next(character: Character, role: Role): RecordedTurn | undefined {
     return this.recording?.turns.find((t, i) => t.request.character === character && t.request.role === role && !this.played.has(i));
   }
-  async say(id: string, character: Character, text: string, role: Role, receive: (event: GameEvent) => void, signal: AbortSignal) {
+  async say(id: string, character: Character, text: string, role: Role, receive: (event: GameEvent) => void, signal: AbortSignal, voice = true) {
     if (!MOCK) {
-      const response = await request(`/game/${encodeURIComponent(id)}/say`, { character, text }, signal);
+      const response = await request(`/game/${encodeURIComponent(id)}/say`, { character, text, voice }, signal);
       if (!response.body || !response.headers.get('content-type')?.includes('text/event-stream')) throw new Error('The bank did not return an event stream.');
       return readEvents(response.body, receive, signal);
     }

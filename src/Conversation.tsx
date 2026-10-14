@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { bank, MOCK } from './api';
+import { apiUrl, bank, MOCK } from './api';
 import { CAST } from './contract';
 import { useGame } from './store';
-import { sound, voice } from './sound';
+import { sound, voice, wantsVoice } from './sound';
 import { useSpeech } from './useSpeech';
 import TellerTape from './TellerTape';
 import { Approaches, TaskPanel } from './Guide';
@@ -44,8 +44,8 @@ export default function Conversation(){
    useGame.getState().event(event);
    if(event.type==='tool')sound('printer');
    if(event.type==='decision'){sound('stamp');if(!useGame.getState().reduced){document.querySelector('.world')?.animate([{transform:'translate(0,0)'},{transform:'translate(2px,1px)'},{transform:'translate(-1px,0)'},{transform:'translate(0,0)'}],{duration:180});}}
-   if(event.type==='reply'){voice(event.audioUrl);if(event.unlocked.length)sound('door');}
-  },activeRequest.signal);setRevision(n=>n+1);if(!MOCK)setText('');}
+   if(event.type==='reply'){voice(event.audioUrl&&apiUrl(event.audioUrl),event.delegateAudioUrl&&apiUrl(event.delegateAudioUrl));if(event.unlocked.length)sound('door');}
+  },activeRequest.signal,wantsVoice());setRevision(n=>n+1);if(!MOCK)setText('');}
   catch(error){if((error as Error).name!=='AbortError')useGame.getState().set({error:error instanceof Error?error.message:'The connection was interrupted. No decision has been inferred.'});}
   finally{useGame.getState().set({busy:false});activeRequest=null;}
  }

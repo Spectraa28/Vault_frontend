@@ -55,7 +55,32 @@ export function ambience(_area: Area) {
   current = music;
 }
 
-export function mute(value: boolean) { Howler.mute(value); }
+let muted = false;
+export function mute(value: boolean) { muted = value; Howler.mute(value); if (value) speech?.stop(); }
+/** Sound off means no voice is asked for at all, so no credits are spent on a line nobody hears. */
+export const wantsVoice = () => !muted;
 export function stopAudio() { sounds.forEach(s => s.stop()); speech?.stop(); current = undefined; }
-export function voice(url?: string) { speech?.unload(); if (url && /^https?:\/\//.test(url)) { speech = new Howl({ src: [url], html5: true, volume: 0.8 }); speech.play(); } }
+/**
+ * Speaks a character's line, then any that follow it (Pip after Marlowe). The audio streams: html5
+ * playback starts on the first chunk the server has, not when the whole line has arrived. The
+ * music dips while someone is talking.
+ */
+export function voice(...urls: (string | undefined)[]) {
+  speech?.unload();
+  speech = undefined;
+  const queue = urls.filter((u): u is string => Boolean(u));
+  if (!queue.length) return;
+  const next = () => {
+    const url = queue.shift();
+    if (!url) { duck(false); return; }
+    speech = new Howl({ src: [url], format: ['mp3'], html5: true, volume: 0.95, onend: next, onloaderror: next, onplayerror: next });
+    speech.play();
+  };
+  duck(true);
+  next();
+}
+function duck(on: boolean) {
+  const music = sounds.get('music');
+  if (music?.playing()) music.fade(music.volume(), on ? MUSIC_LEVEL * 0.35 : MUSIC_LEVEL, 350);
+}
 export function listener(x: number, y: number, z: number) { Howler.pos(x, y, z); }
