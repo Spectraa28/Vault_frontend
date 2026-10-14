@@ -1,5 +1,10 @@
 import { CAST, type Character, type Role } from './contract';
 
+/** The suggestions are written for the default customer; this puts the player's own name and account in. */
+export function personalise(text: string, c: { name: string; account: string }): string {
+  return text.replaceAll('Dana Whitlock', c.name).replaceAll('Whitlock', c.name).replaceAll('4471', c.account);
+}
+
 export type Vec = [number, number, number];
 
 /** What the player should do next, in words, and who or where it involves. */

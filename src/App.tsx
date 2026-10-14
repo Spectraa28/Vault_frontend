@@ -1,7 +1,7 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { AUTO, bank, MOCK } from './api';
-import { CAST, LEVELS, type Role } from './contract';
+import { CAST, DEFAULT_CUSTOMER, LEVELS, type Role } from './contract';
 import { useGame } from './store';
 import { ambience, mute, sound, stopAudio } from './sound';
 import Conversation, { cancelTurn } from './Conversation';
@@ -21,7 +21,7 @@ function Login(){
  const s=useGame();const [name,setName]=useState(s.name),[role,setRole]=useState<Role>(s.role),[code,setCode]=useState(''),[needsCode,setNeedsCode]=useState(false),[loading,setLoading]=useState(false),[health,setHealth]=useState<'loading'|'ready'|'error'>('loading');
  const check=async()=>{setHealth('loading');s.set({error:''});try{const h=await bank.health();setNeedsCode(h.needsCode);setHealth('ready');}catch(e){s.set({error:(e as Error).message});setHealth('error');}};
  useEffect(()=>{void check();},[]);
- const submit=async(e:React.FormEvent)=>{e.preventDefault();if(loading||health!=='ready')return;setLoading(true);s.set({error:''});try{const game=await bank.start(role,name.trim(),code);s.set({gameId:game.gameId,name:name.trim(),role,unlocked:game.unlocked,phase:'play'});sound('door');}catch(e){s.set({error:(e as Error).message});}finally{setLoading(false);}};
+ const submit=async(e:React.FormEvent)=>{e.preventDefault();if(loading||health!=='ready')return;setLoading(true);s.set({error:''});try{const game=await bank.start(role,name.trim(),code);s.set({gameId:game.gameId,name:name.trim(),customer:game.customer??DEFAULT_CUSTOMER,role,unlocked:game.unlocked,phase:'play'});sound('door');}catch(e){s.set({error:(e as Error).message});}finally{setLoading(false);}};
  return <section className="login-screen"><button className="back-button" onClick={()=>s.set({phase:'title',error:''})}>← Back to the street</button><form className="login-panel" onSubmit={submit}><p className="eyebrow">THE NIGHT REGISTER</p><h1>Who’s<br/><em>asking?</em></h1><p className="muted-copy">A name, a face, a plausible story.<br/>Let’s start with the first two.</p><label htmlFor="player-name">YOUR NAME</label><input autoFocus id="player-name" value={name} maxLength={40} onChange={e=>setName(e.target.value)} required placeholder="A stranger in the rain" autoComplete="nickname"/>
   <fieldset><legend>YOUR COVER</legend><div className="badge-options">{(['customer','manager'] as Role[]).map(r=><button type="button" key={r} className={`id-option ${role===r?'selected':''}`} aria-pressed={role===r} onClick={()=>setRole(r)}><span className="badge-emblem">M</span><span>{r}<small>{r==='customer'?'VISITOR · AFTER HOURS':'STAFF · AUTHORIZED'}</small></span><i>{role===r?'✓':'○'}</i></button>)}</div></fieldset>
   <fieldset className="avatar-options"><legend>YOUR FACE</legend>{[0,1].map(i=><button type="button" key={i} aria-pressed={s.avatar===i} onClick={()=>s.set({avatar:i})}>{i?'The copper coat':'The green coat'} {s.avatar===i?'✓':''}</button>)}</fieldset>

@@ -70,3 +70,11 @@
 .id-card.manager button{background:#c6a365;color:#102d26}
 .id-card button:hover:not(:disabled){filter:brightness(1.15);color:#eee5cf}
 .id-card.manager button:hover:not(:disabled){color:#102d26}
+
+.who-you-are{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 14px 8px;white-space:nowrap;background:rgba(233,223,196,.94);color:#29362f;border-radius:5px;box-shadow:0 8px 18px -10px #000;position:relative;font-family:"Trebuchet MS",system-ui,sans-serif}
+.who-you-are:after{content:'';position:absolute;bottom:-6px;left:50%;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:rgba(233,223,196,.94)}
+.who-you-are span{font-size:12.5px;opacity:.7}
+.who-you-are strong{font-family:var(--serif);font-weight:400;font-size:19px;line-height:1.15}
+.who-you-are small{font-size:13.5px}
+.who-you-are.manager{background:rgba(22,51,41,.95);color:#eee5cf;border:1px solid #c6a36580}
+.who-you-are.manager:after{border-top-color:rgba(22,51,41,.95)}

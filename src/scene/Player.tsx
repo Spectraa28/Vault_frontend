@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import Ecctrl, { type CustomEcctrlRigidBody } from 'ecctrl';
 import { useFrame } from '@react-three/fiber';
-import { useKeyboardControls } from '@react-three/drei';
+import { Html, useKeyboardControls } from '@react-three/drei';
+import { WhoYouAre } from '../IdCard';
 import { CAST, type Character } from '../contract';
 import { useGame } from '../store';
 import { Figure, LOOKS, playerControl, playerMotion, playerPosition } from './Actor';
@@ -28,5 +29,6 @@ export default function Player() {
  });
  return <Ecctrl ref={ref} autoBalance={false} position={[1.2,1.4,6.3]} capsuleHalfHeight={.42} capsuleRadius={.3} floatHeight={.22} characterInitDir={Math.PI} disableControl={phase!=='play'} disableFollowCam={phase!=='play'} camInitDir={{x:.24,y:Math.PI}} camInitDis={-5.8} camMaxDis={area==='vault'?-5.5:-10} camMinDis={-1.4} camUpLimit={1.25} camLowLimit={-0.45} camMoveSpeed={1.6} camZoomSpeed={1.8} camTargetPos={{x:0,y:area==='vault'?.25:.65,z:0}} camCollision camCollisionOffset={.8} camFollowMult={reduced?100:11} camLerpMult={reduced?100:7} camListenerTarget="domElement" maxVelLimit={3.7} sprintMult={1.6} jumpVel={0} slopeMaxAngle={.8} turnSpeed={12}>
   <group position={[0,-.88,0]}><Figure player look={LOOKS[avatar?'player-1':'player-0']}/></group>
+  {phase==='play'&&<Html position={[0,1.3,0]} center distanceFactor={6} zIndexRange={[15,0]} style={{pointerEvents:'none'}}><WhoYouAre/></Html>}
  </Ecctrl>;
 }

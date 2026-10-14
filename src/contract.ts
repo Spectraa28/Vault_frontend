@@ -14,7 +14,11 @@ export const eventSchema = z.discriminatedUnion('type', [
 ]);
 export type GameEvent = z.infer<typeof eventSchema>;
 export type Reply = Extract<GameEvent, { type: 'reply' }>;
-export const startSchema = z.object({ gameId: z.string().min(1), unlocked: z.array(characterSchema) });
+export const customerSchema = z.object({ name: z.string(), account: z.string() });
+export type Customer = z.infer<typeof customerSchema>;
+/** Who the recorded tour was played as, and who anyone is when the server sends no customer. */
+export const DEFAULT_CUSTOMER: Customer = { name: 'Dana Whitlock', account: '4471' };
+export const startSchema = z.object({ gameId: z.string().min(1), unlocked: z.array(characterSchema), customer: customerSchema.optional() });
 export const summarySchema = z.object({ cleared: z.array(z.number().int().min(1).max(5)), turns: z.number().int().min(0), rank: z.string() });
 export type Summary = z.infer<typeof summarySchema>;
 export const recordingSchema = z.object({ recordedAt: z.string(), note: z.string(), turns: z.array(z.object({ request: z.object({ character: characterSchema, role: z.enum(['customer', 'manager']), text: z.string() }), events: z.array(eventSchema) })) });
