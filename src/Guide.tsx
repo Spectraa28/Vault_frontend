@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MOCK } from './api';
 import { CAST, type Character } from './contract';
-import { approachesFor, checklist, nextStep, objectiveFor, personalise, standPoint } from './guide';
+import { READ_THE_ROOM, approachesFor, checklist, nextStep, objectiveFor, personalise, standPoint } from './guide';
 import { useGame } from './store';
 import { playerPosition } from './scene/shared';
 
@@ -59,7 +59,7 @@ export function Approaches({ character, onPick }: { character: Character; onPick
   const options = approachesFor(character, objective, role);
   if (MOCK || !options.length) return null;
   return <div className="approaches" aria-label="Ways to open">
-    <span>{objective.who === character && objective.flipTo ? `For the next level, flip your badge to ${objective.flipTo} first. Or try:` : 'Not sure what to say? Borrow an opening, then make it yours:'}</span>
+    <span>{objective.who === character && objective.flipTo ? `For the next level, flip your badge to ${objective.flipTo} first. Or try:` : READ_THE_ROOM[character]} Borrow a line or invent your own:</span>
     <div>{options.map(o => <button type="button" key={o.label} aria-pressed={o.suggested} className={o.suggested ? 'suggested' : ''} disabled={busy} onClick={() => onPick(personalise(o.line, customer))}>{o.suggested && <i>NEXT</i>}{o.label}</button>)}</div>
   </div>;
 }

@@ -17,7 +17,7 @@
 
 .replay-nowhere{margin:8px 0 0;padding:8px 12px;border-left:3px solid #c6a365;background:rgba(198,163,101,.12);color:#eee5cf;font-size:17px;line-height:1.4}
 
-.conversation-layer.cine>*:not(.letterbox){opacity:0!important;pointer-events:none;transition:opacity .45s ease}
+.conversation-layer.cine>*:not(.letterbox):not(.conversation-heading){opacity:0!important;pointer-events:none;transition:opacity .45s ease}
 .conversation-layer>*:not(.letterbox){transition:opacity .45s ease}
 .cut-fade{position:fixed;inset:0;background:#050b0a;opacity:0;pointer-events:none;z-index:60;transition:opacity .3s ease}
 .cut-fade.on{opacity:1}
@@ -136,13 +136,19 @@
  .opening-caption>span,.opening-caption .caption-line,.opening-caption small{display:none}
  .opening-caption p{font-size:22px;margin:0}
  .opening-footer{position:static;margin-top:auto;padding-top:30px;flex-shrink:0}
- .conversation-layer{grid-template-rows:120px max-content 120px max-content}
+ .conversation-layer{grid-template-rows:100px max-content 120px max-content}
+ .conversation-layer .dialogue{grid-row:2}
+ .conversation-layer .wallet{grid-row:4}
  .wallet{min-height:max-content}.conversation-layer .dialogue{min-height:max-content}
- .tasks-open .conversation-layer{grid-template-rows:120px max-content 250px 120px max-content}
+ .tasks-open .conversation-layer{grid-template-rows:100px 250px max-content 120px max-content}
+ .tasks-open .conversation-layer>.task-panel{grid-row:2}
+ .tasks-open .conversation-layer .dialogue{grid-row:3}
+ .tasks-open .conversation-layer .wallet{grid-row:5}
  .conversation-layer>.task-panel{min-height:250px;max-height:250px}
  .conversation-layer .teller-tape{min-height:120px;max-height:120px}
  .conversation-layer .teller-tape:has(.hold-state){min-height:220px;max-height:220px}
- .conversation-layer:has(.hold-state){grid-template-rows:120px max-content 220px max-content}
+ .conversation-layer:has(.hold-state){grid-template-rows:100px max-content 220px max-content}
+ .tasks-open .conversation-layer:has(.hold-state){grid-template-rows:100px 250px max-content 220px max-content}
  .tasks-open .conversation-layer:has(.hold-state){grid-template-rows:120px max-content 250px 220px max-content}
 }
 /* Copying a line should give the line once: the screen-reader copy and the "next" arrow are not part of it. */
@@ -163,4 +169,5 @@ h1,h2,h3,.character-label h2,.opening-caption p,.spoken-line{text-shadow:0 1px 2
 @media(max-width:800px){.now-bar{top:118px;bottom:auto;left:14px;right:14px;transform:none;max-width:none;min-width:0;border-radius:14px}.now-bar p{font-size:14px}}
 /* Phones in conversation: the game toolbar and the big name label give way, so the message box is never covered. The dialogue already names the character, and Leave is in reach. */
 @media(max-width:800px){.phase-conversation .utility-hud,.phase-conversation .character-label{display:none}}
-@media(max-width:800px){.phase-conversation .now-bar{right:92px}.phase-conversation .conversation-heading{z-index:46}}
+.conversation-tasks{display:none}
+@media(max-width:800px){.phase-conversation .now-bar{top:100px}.phase-conversation .conversation-heading{z-index:46;grid-row:1;align-self:end;max-width:none;gap:18px}.conversation-heading .conversation-tasks{display:flex}}

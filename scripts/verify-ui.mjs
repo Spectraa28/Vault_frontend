@@ -28,8 +28,13 @@ for(const [width,height] of [[1440,900],[390,844],[1280,720],[1920,1080]]){
  await page.getByRole('button',{name:/The forged memo/}).click();assert.equal((await state()).selectedTask,2);assert.deepEqual((await state()).cleared,[]);
  await page.keyboard.press('Escape');assert.equal(await page.locator('.task-panel').count(),0);
  await page.getByRole('button',{name:/Current role customer/}).click();await page.getByText('Branch manager',{exact:true}).waitFor();assert.equal(await page.locator('.bank-card').count(),0);
- await set({role:'customer',name:'A'.repeat(40),customer:{name:'A'.repeat(40),account:'4471'},reply:{name:'Gus',reply:'A very long reply. '.repeat(45),mood:'wary',trust:1,attempts:[],coldShoulder:false,enforcementHeld:true,unlocked:[],cleared:[]}});
- await page.waitForTimeout(300);
+ const spoken='A very long reply. '.repeat(45);
+ await set({role:'customer',busy:true,notice:'The lobby is open',name:'A'.repeat(40),customer:{name:'A'.repeat(40),account:'4471'}});
+ await page.waitForFunction(()=>document.querySelector('#player-line')?.disabled);
+ await set({busy:false,reply:{name:'Gus',reply:spoken,mood:'wary',trust:1,attempts:[],coldShoulder:false,enforcementHeld:true,unlocked:[],cleared:[]}});
+ await page.waitForFunction(text=>document.querySelector('.spoken-line')?.textContent===text,spoken,{polling:100,timeout:10000});
+ await page.waitForFunction(()=>document.activeElement?.id==='player-line',undefined,{polling:100,timeout:10000});
+ await page.waitForTimeout(2500);assert.equal((await state()).phase,'conversation','An old unlock notice must not end a conversation');
  const rects=await page.evaluate(()=>{const r={};for(const selector of ['.wallet','.dialogue','.teller-tape','.game-hud','.utility-hud']){const el=document.querySelector(selector),b=el.getBoundingClientRect();r[selector]={x:b.x,y:b.y,w:b.width,h:b.height,scroll:el.scrollWidth>el.clientWidth+2};}return r;});
  results.push({width,height,rects});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await page.locator('#player-line').fill('walking wasd should stay in the message box');assert.equal((await state()).phase,'conversation');

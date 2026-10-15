@@ -101,7 +101,7 @@ browser cannot start a game.
 
 | Command | Result |
 |---|---|
-| `npm test` | 34 unit tests: events, guidance, the wallet and the "Now" bar. |
+| `npm test` | 35 unit tests: events, guidance, the wallet and the "Now" bar. |
 | `npx tsc --noEmit -p .` | Type check. |
 | `npm run build` | Production build into `dist/`. |
 | `node scripts/verify-camera.mjs` | Camera check at 60, 120 and 144 Hz. Needs a running preview. |

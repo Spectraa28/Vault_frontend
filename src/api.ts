@@ -99,7 +99,7 @@ export class BankClient {
   }
   async health() {
     if (MOCK) return { needsCode: false };
-    const data = await (await request('/health', undefined, AbortSignal.timeout(10000))).json();
+    const data = await (await request('/health', undefined, AbortSignal.timeout(75000))).json();
     if (typeof data.needsCode !== 'boolean') throw new Error('Invalid response from the bank health endpoint.');
     return data as { needsCode: boolean };
   }

@@ -8,7 +8,6 @@ import { useSpeech } from './useSpeech';
 import TellerTape from './TellerTape';
 import { Approaches, TaskPanel } from './Guide';
 import { IdCard } from './IdCard';
-function Typewriter({text}:{text:string}){const reduced=useGame(s=>s.reduced);const [count,setCount]=useState(0);useEffect(()=>{setCount(reduced?text.length:0);if(reduced)return;const t=setInterval(()=>setCount(n=>{if(n>=text.length){clearInterval(t);return n;}return n+2;}),25);return()=>clearInterval(t);},[text,reduced]);return <><span aria-hidden="true">{text.slice(0,count)}{count>=text.length&&<span className="next-arrow">▾</span>}</span><span className="sr-only">{text}</span></>;}
 let activeRequest:AbortController|null=null;
 export function cancelTurn(){activeRequest?.abort();activeRequest=null;}
 export default function Conversation(){
@@ -19,7 +18,7 @@ export default function Conversation(){
  const upcoming=MOCK&&!next?bank.upcoming():undefined;
  const nowhere=!MOCK||next?'':upcoming?`Nothing was recorded for ${cast.name} as the ${s.role}. The tour continues with ${CAST[upcoming.request.character].name}, signed in as the ${upcoming.request.role}.`:'The recorded tour is finished. Use “Leave the bank” to see how the night went.';
  const speech=useSpeech(setText,m=>s.set({error:m}));
- useEffect(()=>{const t=setTimeout(()=>input.current?.focus(),s.reduced?0:1250);return()=>clearTimeout(t);},[character,s.reduced]);
+ useEffect(()=>{if(s.busy)return;const t=setTimeout(()=>input.current?.focus(),s.reduced?0:350);return()=>clearTimeout(t);},[character,s.reduced,s.busy]);
  // Each character says their opening line aloud as the dialogue appears. Recorded once in their own voice (scripts/make-greetings.mts), so it costs nothing and starts at once.
  useEffect(()=>{if(useGame.getState().reply)return;const t=setTimeout(()=>voice(`/audio/voice/${character}.mp3`),s.reduced?0:700);return()=>clearTimeout(t);},[character]);
  useEffect(()=>{setText(MOCK?(next?.request.text??''):'');},[character,s.role,revision,next]);
@@ -30,10 +29,10 @@ export default function Conversation(){
   // Gus opening the doors is worth watching: step the dialogue aside, show the doors swing in, then
   // fade through black to hand the camera back, so there is no jump from one view to the other.
   if(s.notice&&character==='door-guard'&&s.reply.unlocked.includes('cashier')&&!s.reduced){
-   const timers=[setTimeout(()=>g().set({cine:{shot:'door',at:Date.now()}}),1300),setTimeout(()=>g().set({fade:true}),5600),setTimeout(()=>g().leave(),5950),setTimeout(()=>g().set({fade:false}),6250)];
+   const timers=[setTimeout(()=>g().set({cine:{shot:'door',at:Date.now()}}),700),setTimeout(()=>g().set({fade:true}),3600),setTimeout(()=>g().leave(),3950),setTimeout(()=>g().set({fade:false}),4250)];
    return()=>{timers.forEach(clearTimeout);g().set({fade:false});};
   }
-  if(s.reply.coldShoulder||s.notice){const t=setTimeout(()=>g().leave(),s.reply.coldShoulder?3000:2200);return()=>clearTimeout(t);}
+  if(s.reply.coldShoulder){const t=setTimeout(()=>g().leave(),3000);return()=>clearTimeout(t);}
  },[s.reply,s.busy,s.notice]);
  useEffect(()=>{
   const down=(e:KeyboardEvent)=>{if(e.code==='Escape'){e.preventDefault();if(useGame.getState().tasksOpen){useGame.getState().set({tasksOpen:false});return;}speech.end();s.leave();}else if(e.code==='Space'&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)&&!(e.target instanceof HTMLButtonElement)&&!s.busy&&!MOCK){e.preventDefault();if(!e.repeat)speech.begin();}else if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&!(e.target instanceof HTMLInputElement)&&!(e.target instanceof HTMLTextAreaElement)&&!(e.target as HTMLElement).closest('button, select, .task-panel, .wallet, .teller-tape')){s.leave();}};
@@ -54,16 +53,16 @@ export default function Conversation(){
  const reply=s.reply?.reply??(s.busy?'':cast.greeting);
  return <div className={`conversation-layer ${s.cine?'cine':''}`}>
   <div className="letterbox top"/><div className="letterbox bottom"/>
-  <div className="conversation-heading"><span className="eyebrow">A PRIVATE CONVERSATION</span><button className="text-button" onClick={()=>{speech.end();s.leave();}}>Leave <kbd>Esc</kbd></button></div>
+  <div className="conversation-heading"><span className="eyebrow">A PRIVATE CONVERSATION</span><button className="text-button conversation-tasks" aria-expanded={s.tasksOpen} onClick={()=>s.set({tasksOpen:!s.tasksOpen})}>Guardrails</button><button className="text-button" onClick={()=>{speech.end();s.leave();}}>Leave <kbd>Esc</kbd></button></div>
   <div className="character-label"><span>{cast.title}</span><h2>{cast.name}<i>.</i></h2><div className="trust" aria-label={s.trust===null?'Trust not yet known':`Trust ${s.trust} out of 5`}>{Array.from({length:5},(_,i)=><b key={i} className={s.trust!==null&&i<s.trust?'filled':''}/>)}<small>{s.trust===null?'READING THE ROOM':s.mood.toUpperCase()}</small></div></div>
   <IdCard onShow={line=>{setText(t=>(t.trim()?`${t.trim()} ${line}`:line).slice(0,1500));input.current?.focus();}}/>
   {s.tasksOpen&&<TaskPanel/>}
   <TellerTape/>
-  <motion.section className="dialogue" initial={s.reduced?false:{y:40,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:s.reduced?0:.7,duration:.4}} aria-label={`Conversation with ${cast.name}`}>
+  <motion.section className="dialogue" initial={s.reduced?false:{y:16,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:s.reduced?0:.25}} aria-label={`Conversation with ${cast.name}`}>
    {s.lastLine&&<p className="last-line">“{s.lastLine}”</p>}
    {s.reply?.delegate&&<div className="delegate-line"><span>PIP · JUNIOR TELLER</span><p>{s.reply.delegate.reply}</p></div>}
    <div className="dialogue-frame"><span className="nameplate">{cast.name}</span>
-    <div className="spoken-line" aria-live="polite">{s.busy?<div className="thinking"><span className="ellipsis">•••</span><small>{elapsed<3?'Choosing their words':s.slips.some(a=>a.decision==='held')?'Your request needs time to review. Please wait while our management reviews it':character==='door-guard'?'Gus is checking the night register':character==='cashier'?'Wren is working through the paperwork':'Marlowe is checking the mechanism'}<span>{elapsed}s</span></small></div>:<Typewriter text={reply}/>}</div>
+    <div className="spoken-line" aria-live="polite">{s.busy?<div className="thinking"><span className="ellipsis">•••</span><small>{s.slips.some(a=>a.id>s.turnStartSlip&&a.decision==='held')?'Waiting for management’s approval':elapsed<3?'Choosing their words':character==='door-guard'?'Gus is considering your story':character==='cashier'?'Wren is considering your request':'Marlowe is turning your story over'}<span>{elapsed}s</span></small></div>:reply}</div>
     <form onSubmit={e=>{e.preventDefault();void send();}}>
      <label className="sr-only" htmlFor="player-line">Your line to {cast.name}</label>
      <Approaches character={character} onPick={line=>{setText(line);input.current?.focus();}}/>

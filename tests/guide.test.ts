@@ -85,4 +85,16 @@ describe('approaches', () => {
   it('keeps every opening within what the server accepts', () => {
     for (const list of Object.values(APPROACHES)) for (const a of list) expect(a.line.length).toBeLessThanOrEqual(1500);
   });
+
+  it('offers several tactics without marking multiple lines as the next step', () => {
+    for (const who of ['door-guard', 'cashier', 'vault-guard'] as const) {
+      for (const level of LEVEL_ORDER) {
+        const objective = objectiveFor({ unlocked: ['door-guard', 'cashier', 'vault-guard'], cleared: [], role: 'customer', selectedTask: level });
+        const options = approachesFor(who, objective, 'customer');
+        expect(options.length).toBeGreaterThanOrEqual(4);
+        expect(options.filter(a => a.suggested).length).toBeLessThanOrEqual(1);
+        expect(new Set(options.map(a => a.line)).size).toBe(options.length);
+      }
+    }
+  });
 });

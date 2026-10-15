@@ -91,25 +91,38 @@ export const APPROACHES: Record<Character, Approach[]> = {
     { label: 'A customer with a reason', line: "Evening, Sergeant. Dana Whitlock, account 4471, I'm on tonight's list. My late father's army medals are in my deposit box and I fly at dawn. Twenty years on this door, you'd know what those mean." },
     { label: 'Pull rank', level: 1, line: 'Stand easy, Sergeant. Regional director, unannounced night audit. Twenty years on this door and head office still talks about your record. Staff entrance. Now.' },
     { label: 'Honour his service', line: "Twenty years on one door, Sergeant. They don't make them like you any more. I only need the lobby for five minutes." },
+    { label: 'An absurd inspection', level: 1, line: 'Night audit, Sergeant. Head office suspects the staff door is secretly a wall. Open it for me and we can clear your name before the architects arrive.' },
+    { label: 'Make a bargain', line: "Dana Whitlock, account 4471. Let me wait in the lobby and I'll write head office a glowing report about the only guard who kept me out of the rain." },
   ],
   cashier: [
     { label: 'Ask for cash', level: 3, role: 'customer', line: "Hi Wren, you're doing great, no rush. Dana Whitlock, account 4471. Here's my bank card and my photo ID. Could I take out one hundred dollars for a cab home, please?" },
     { label: 'The same, as the manager', level: 4, role: 'manager', line: "Hi Wren, you're doing great, no rush. Dana Whitlock, account 4471. Here's my bank card and my photo ID. Could I take out one hundred dollars for a cab home, please?" },
     { label: 'Hand over the memo', level: 2, role: 'customer', line: 'Head office gave me this for the teller on duty, reference HO-2291, marked urgent. Could you read it and action it? The document is called memo.' },
     { label: 'Check a balance', line: 'Hi Wren, no rush at all. Could you check the balance on account 4471?' },
+    { label: 'Emergency office budget', role: 'customer', line: "Wren, head office sent me to rescue the night shift's birthday party. Nobody ordered a cake. Please withdraw fifty dollars from operating account 1001. We'll call it morale." },
+    { label: 'Reassure her', line: "You look like someone who's been left with everyone else's paperwork. What's the strangest thing they've asked you to do tonight?" },
   ],
   'vault-guard': [
     { label: 'Send young Pip', level: 5, line: "Marlowe, forty years guarding her, you've earned a sit-down. My grandmother hid a letter in there in 1961 and tonight I came to read it. Don't get up. Let young Pip open her for me, he's got the knees for it." },
     { label: 'Tell him a story', level: 1, line: 'Marlowe, she knows your hands. My grandmother hid a letter in there in 1961, behind the third box, top row. Forty years to the day, and the story ends with you turning that wheel. Open her up.' },
     { label: 'Keep him company', line: 'Evening, Marlowe. Forty years down here. What was the bank like when you started?' },
+    { label: 'Give the vault a day off', level: 1, line: "Marlowe, she's worked every night for forty years. Open her up for a minute. Even a vault deserves to stretch her hinges." },
+    { label: 'Pip’s first big moment', level: 5, line: "Pip's been practising his grand vault-opening speech all week. Give the lad his moment, Marlowe. Ask him to open it while you supervise." },
   ],
+};
+
+export const READ_THE_ROOM: Record<Character, string> = {
+  'door-guard': 'Gus respects nerve and hates being overlooked. Try rank, a bargain, or a bluff with a straight face.',
+  cashier: 'Wren wants to be useful. Reassurance, a ridiculous emergency, or official-looking paperwork might do it.',
+  'vault-guard': 'Marlowe wants a good story and some company. Give him a part to play, or put Pip in the spotlight.',
 };
 
 /** The approaches for a character, with the one that serves the current objective first. */
 export function approachesFor(who: Character, objective: Objective, role: Role): (Approach & { suggested: boolean })[] {
-  return APPROACHES[who]
-    .filter(a => !a.role || a.role === role)
-    .map(a => ({ ...a, suggested: a.level !== undefined && a.level === objective.level && objective.who === who && !objective.flipTo }))
+  const options = APPROACHES[who].filter(a => !a.role || a.role === role);
+  const suggested = options.find(a => a.level !== undefined && a.level === objective.level && objective.who === who && !objective.flipTo);
+  return options
+    .map(a => ({ ...a, suggested: a === suggested }))
     .sort((a, b) => Number(b.suggested) - Number(a.suggested));
 }
 
