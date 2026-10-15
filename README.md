@@ -1,138 +1,107 @@
-# The Vault: front end
+# The Vault · Frontend
 
-The Vault is a game. The player talks to AI staff in a bank and tries to make them rob it.
-The staff can believe the player. ArmorIQ decides if each action can occur.
+**Walk into a 3D bank. Talk to its AI staff. See which actions ArmorIQ allows, blocks, or holds for approval.**
 
-This repository is the front end: a 3D bank in the browser. The back end is in a different
-repository: [Vault_backend](https://github.com/Spectraa28/Vault_backend). The back end
-contains the AI characters, the bank MCP server and the ArmorIQ integration.
+| | |
+|---|---|
+| Live game | [vault.sverma.online](https://vault.sverma.online) |
+| Backend | [Vault_backend](https://github.com/Spectraa28/Vault_backend) |
+| Stack | React · TypeScript · Three.js · React Three Fiber · Vite |
 
-Live game: https://vault.sverma.online
+## What you can do
 
-## 1. Description
+- Walk around the bank and talk to Gus, Wren, and Marlowe.
+- Try five scenarios that show policy, intent, approval, identity, and scoped delegation.
+- Read each tool call and its server decision on the teller tape.
+- Switch between the customer and manager identities.
+- Listen to character voices when the backend has voice enabled.
 
-The player walks in a 3D bank and talks to three characters: Gus, Wren and Marlowe. When a
-character tries an action, the screen shows it:
+ArmorIQ sponsors the Flow State hackathon and provides the security platform used by this project. The backend sends tool calls through ArmorIQ checks. The frontend displays the decisions it receives; it does not decide whether an action is safe.
 
-- The **teller tape** prints each tool call. It then stamps the ArmorIQ decision on it:
-  ALLOWED, ON HOLD, BLOCKED or NOT IN PLAN.
-- The **props** show the decision. For example, the lamp at the staff door flashes red when
-  ArmorIQ refuses the door.
-- The **"Now" bar** at the top tells the player what to do next.
-- The **wallet** shows the identity of the player. A card adds the identity to the message.
-- The **guardrail list** shows the five levels. A level gets a tick only when the server says
-  that it occurred.
-- Each character **speaks** with an ElevenLabs voice.
+## Play the game
 
-NOTE: The front end never decides about an action. All decisions come from the server events.
+1. Open the live game or run the frontend locally.
+2. Choose a name and identity.
+3. Walk up to a character. Press `E` to talk.
+4. Type a request and press `Enter`. You can also hold the microphone button when browser speech input is available.
+5. Read the teller tape to see the tool call and its result.
+6. Follow the on-screen guide to try each of the five levels.
 
-## 2. Requirements
+| Control | Action |
+|---|---|
+| `W`, `A`, `S`, `D` or arrow keys | Walk |
+| `Shift` | Jog |
+| `E` | Talk to a nearby character |
+| Drag the mouse | Look around |
+| `Q` / `R` | Turn the camera |
+| Mouse wheel | Zoom |
+| `Esc` | Leave a conversation |
+| Hold `Space` | Dictate, when speech input is available |
 
-- Node.js 20 or higher.
-- A running back end. Refer to the Vault_backend README.
+Touch controls and a connected gamepad are also supported.
+
+## Live game and recorded tour
+
+| Address | What it does |
+|---|---|
+| `/` | Live game. Requests go to the backend, AI characters, and ArmorIQ. |
+| `/?replay=auto` | Recorded tour that plays automatically. It makes no live AI or ArmorIQ calls. |
+| `/?replay=1` | Recorded tour that waits for each step. It makes no live AI or ArmorIQ calls. |
+
+The recorded tour uses saved requests and outcomes. It is useful when the backend is unavailable. A replay does not prove that a live policy check ran.
+
+## Run locally
+
+### Requirements
+
+- Node.js 20 or later.
+- A running [Vault_backend](https://github.com/Spectraa28/Vault_backend).
 - A browser with WebGL.
 
-## 3. Procedure: install and start
+1. Clone this repository and install its packages:
 
-1. Clone the repository.
-2. Run `npm install`.
-3. Start the back end on `http://localhost:8787`.
-4. Run `npm run dev`.
-5. Open `http://127.0.0.1:5173`.
+   ```sh
+   npm install
+   ```
 
-NOTE: In development, the front end uses `http://localhost:8787` for the API. To use a
-different address, set `VITE_API_URL`.
+2. If the backend does not use `http://localhost:8787`, copy `.env.example` to `.env` and set `VITE_API_URL` to its address.
+3. Start the frontend:
 
-## 4. Settings
+   ```sh
+   npm run dev
+   ```
 
-| Variable | Use |
+4. Open `http://127.0.0.1:5173`.
+
+The development server uses `http://localhost:8787` by default. Vite reads `VITE_API_URL` when it builds the frontend. Build again after you change this value.
+
+## Deploy on Vercel
+
+The backend must be available before the live game can start. See the [backend deployment steps](https://github.com/Spectraa28/Vault_backend#deploy).
+
+1. Import this repository into Vercel.
+2. Set `VITE_API_URL` to the backend API origin, for example `https://api.sverma.online`.
+3. Deploy with the settings in `vercel.json`.
+4. Add `vault.sverma.online` as the Vercel domain and follow Vercel's DNS instructions.
+5. Set the backend `CORS_ORIGIN` to `https://vault.sverma.online`.
+6. Open the deployed site and start a game. If the backend is asleep, wait briefly and retry. The recorded tour remains available.
+
+## Checks
+
+Run these commands from this repository:
+
+| Command | Purpose |
 |---|---|
-| `VITE_API_URL` | Address of the back end. Example: `https://api.sverma.online`. |
+| `npm test` | Run frontend unit tests. |
+| `npm run build` | Type-check and build the production site. |
+| `node scripts/verify-camera.mjs` | Check camera motion at common refresh rates. Requires a running preview. |
+| `node scripts/verify-ui.mjs` | Check layout at four screen sizes. Requires a running preview. |
+| `node scripts/inspect-page.mjs <url> <folder> [steps]` | Save browser screenshots. |
 
-The address goes into the build. If you change it, build the front end again.
+## Sponsor and credits
 
-## 5. Controls
-
-| Key | Action |
-|---|---|
-| W, A, S, D or arrow keys | Walk |
-| Shift | Jog |
-| E | Talk to the nearest character |
-| Mouse drag, or Q and R | Turn the camera |
-| Mouse wheel | Zoom |
-| Esc | Leave the conversation |
-| Space (hold) | Speak with the microphone |
-
-## 6. Graphics
-
-The game has two graphics levels. The player selects them at the bottom right.
-
-- **Low** (default): no shadows and no post-processing. Use it on all laptops.
-- **Medium**: shadows, bloom and a sharper image.
-
-The game keeps the selection for the next visit.
-
-## 7. Modes
-
-| Address | Mode |
-|---|---|
-| `/` | Live game. Each line goes to the AI characters and to ArmorIQ. |
-| `/?replay=auto` | Recorded tour. It plays a recorded game. It makes no AI or ArmorIQ calls. |
-| `/?replay=1` | Recorded tour, one step at a time. |
-
-To update the recorded game, run
-`node scripts/sync-recording.mjs <path to Vault_backend/web/mock-run.json>`.
-
-## 8. Deployment (Vercel)
-
-The file `vercel.json` contains the build settings.
-
-1. In Vercel, make a new project from this repository.
-2. Set `VITE_API_URL` to the address of the back end.
-3. Deploy the project.
-4. Add the domain `vault.sverma.online`.
-5. On the DNS server, add a CNAME record from `vault` to `cname.vercel-dns.com`.
-6. On the back end, set `CORS_ORIGIN` to `https://vault.sverma.online`.
-
-CAUTION: If `CORS_ORIGIN` on the back end does not include the front end address, the
-browser cannot start a game.
-
-## 9. Tests and checks
-
-| Command | Result |
-|---|---|
-| `npm test` | 35 unit tests: events, guidance, the wallet and the "Now" bar. |
-| `npx tsc --noEmit -p .` | Type check. |
-| `npm run build` | Production build into `dist/`. |
-| `node scripts/verify-camera.mjs` | Camera check at 60, 120 and 144 Hz. Needs a running preview. |
-| `node scripts/verify-ui.mjs` | Layout check at four screen sizes. Needs a running preview. |
-| `node scripts/inspect-page.mjs <url> <folder> [steps]` | Screenshots with headless Chrome. |
-
-## 10. Layout
-
-```
-src/App.tsx           landing page, start form, HUD
-src/Conversation.tsx  conversation screen
-src/Guide.tsx         objective, briefing, "Now" bar, guardrail list
-src/IdCard.tsx        wallet and identity tag
-src/TellerTape.tsx    the tape that shows each decision
-src/store.ts          game state
-src/api.ts            API client and recorded tour
-src/sound.ts          music, steps and voices
-src/scene/            3D world: characters, props, camera, areas
-public/audio/         music, effects and recorded greetings
-scripts/              sound generators and browser checks
-```
-
-## 11. Credits and disclosure
-
-- This project was made during the Flow State 2026 hackathon.
-- The first version was made by an AI tool from our specification. We then changed it with
-  Claude Code as a coding assistant.
-- The music and the effects are made by `scripts/make-sound.py` and `scripts/make-audio.py`.
-  There are no third-party samples.
-- The character voices are made with ElevenLabs.
-- Fonts: Bodoni Moda and Public Sans (SIL Open Font License), and Liberation Serif for the
-  3D signs (SIL Open Font License).
-- Stack: React, Three.js, React Three Fiber, Rapier, Ecctrl, GSAP, Motion, Zustand, Howler,
-  Vite.
+- **ArmorIQ** is the hackathon sponsor and the policy, intent, approval, identity, and audit platform used by the backend.
+- **ElevenLabs** provides optional character speech. Voice is created by the backend; the API key stays there.
+- The game and launch film were made for the Flow State 2026 hackathon.
+- Music and sound effects are generated by project scripts. The project does not use third-party audio samples.
+- Fonts: Bodoni Moda and Public Sans under the SIL Open Font License; Liberation Serif is used for 3D signs.
